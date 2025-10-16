@@ -36,7 +36,7 @@ Follow these steps to set up and run the project on your local machine.
 
 ### Prerequisites
 
--   Node.js (version 20, as specified in `.nvmrc`)
+-   Node.js (version 22, as specified in `.nvmrc`)
 -   `npm` (comes with Node.js)
 -   If you use `nvm`, run `nvm use` in the project directory.
 
