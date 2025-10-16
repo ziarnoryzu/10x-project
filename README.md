@@ -1,112 +1,114 @@
 # VibeTravels
 
-[![Project Status: MVP Development](https://img.shields.io/badge/status-MVP%20Development-blue)](https://github.com/user/repo)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+VibeTravels is an AI-powered application designed to effortlessly transform your scattered travel notes and ideas into structured, ready-to-use itineraries.
 
-An AI-powered travel planner that transforms your scattered notes into structured, personalized itineraries.
+## 📖 Table of Contents
 
-## Table of Contents
+- [Project Description](#-project-description)
+- [✨ Tech Stack](#-tech-stack)
+- [🚀 Getting Started Locally](#-getting-started-locally)
+- [Available Scripts](#-available-scripts)
+- [Project Scope](#-project-scope)
+- [Project Status](#-project-status)
+- [License](#-license)
 
-- [Project Description](#project-description)
-- [Tech Stack](#tech-stack)
-- [Getting Started Locally](#getting-started-locally)
-- [Available Scripts](#available-scripts)
-- [Project Scope](#project-scope)
-- [Project Status](#project-status)
-- [License](#license)
+## 📝 Project Description
 
-## Project Description
+Many travelers jot down ideas for their trips in various places, but turning those fragments into a coherent plan is often a time-consuming and challenging task. VibeTravels addresses this by leveraging AI to analyze your notes, understand your preferences, and automatically generate a detailed travel plan. The goal of the MVP is to validate the core idea: users desire an intelligent tool to automate itinerary creation from their own notes.
 
-VibeTravels aims to simplify the travel planning process by using AI to convert users' unstructured notes and ideas into detailed and engaging trip itineraries. The primary goal of the MVP is to validate the core assumption: users desire a tool that automates the creation of travel plans from their own free-form notes, tailored to their personal preferences.
+## ✨ Tech Stack
 
-## Tech Stack
+The project uses a modern, scalable, and efficient technology stack chosen for rapid development and high performance.
 
-The project is built with a modern, scalable, and efficient technology stack, chosen to accelerate MVP development while providing a solid foundation for future growth.
+-   **Framework**: [Astro](https://astro.build/)
+-   **UI Library**: [React](https://react.dev/)
+-   **Backend & Database**: [Supabase](https://supabase.io/) (PostgreSQL, Auth, Storage)
+-   **AI Integration**: [OpenRouter.ai](https://openrouter.ai/)
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+-   **UI Components**: [Shadcn/ui](https://ui.shadcn.com/)
+-   **Deployment**: [DigitalOcean](https://www.digitalocean.com/)
 
--   **Frontend:** [Astro](https://astro.build/) & [React](https://react.dev/)
--   **Backend & Database:** [Supabase](https://supabase.com/) (PostgreSQL, Auth, Storage)
--   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
--   **UI Components:** [Shadcn/ui](https://ui.shadcn.com/)
--   **AI Integration:** [OpenRouter.ai](https://openrouter.ai/)
--   **Runtime:** Node.js 20
+## 🚀 Getting Started Locally
 
-## Getting Started Locally
-
-Follow these steps to set up and run the project on your local machine.
+Follow these instructions to set up the project on your local machine.
 
 ### Prerequisites
 
--   Node.js (version 22, as specified in `.nvmrc`)
--   `npm` (comes with Node.js)
--   If you use `nvm`, run `nvm use` in the project directory.
+-   **Node.js**: Version `22.14.0`. We recommend using [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) to manage Node.js versions.
+-   **npm**: Comes bundled with Node.js.
 
-### 1. Clone the repository
+### Installation
 
-```bash
-git clone https://github.com/ziarnoryzu/10x-project.git
-cd vibetravels
-```
+1.  **Clone the repository:**
+    ```sh
+    git clone https://github.com/ziarnoryzu/10x-project.git VibeTravels
+    cd VibeTravels
+    ```
 
-### 2. Install dependencies
+2.  **Set the correct Node.js version:**
+    If you are using `nvm`, run this command in the project's root directory:
+    ```sh
+    nvm use
+    ```
 
-```bash
-npm install
-```
+3.  **Install dependencies:**
+    ```sh
+    npm install
+    ```
 
-### 3. Set up environment variables
+4.  **Set up environment variables:**
+    Create a file named `.env` in the root of the project and add the following variables. You can get these keys from your Supabase and OpenRouter dashboards.
 
-Create a `.env` file in the root of the project by copying the example file:
+    ```env
+    # Supabase
+    PUBLIC_SUPABASE_URL="your-supabase-project-url"
+    PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 
-```bash
-cp .env.example .env
-```
+    # OpenRouter.ai
+    OPENROUTER_API_KEY="your-openrouter-api-key"
+    ```
 
-Now, open the `.env` file and add your credentials for the following services:
--   `SUPABASE_URL` and `SUPABASE_ANON_KEY`: Found in your Supabase project's API settings.
--   `OPENROUTER_API_KEY`: Your API key for OpenRouter.ai.
+5.  **Run the development server:**
+    ```sh
+    npm run dev
+    ```
+    The application will be available at `http://localhost:4321`.
 
-### 4. Run the development server
+## ⚙️ Available Scripts
 
-```bash
-npm run dev
-```
-The application will be available at `http://localhost:4321`.
+The following scripts are available in the project:
 
-## Available Scripts
+-   `npm run dev`: Starts the development server with hot-reloading.
+-   `npm run build`: Builds the application for production.
+-   `npm run preview`: Serves the production build locally for preview.
+-   `npm run lint`: Lints the codebase for errors and style issues.
+-   `npm run lint:fix`: Automatically fixes linting issues.
+-   `npm run format`: Formats all files using Prettier.
 
-The following scripts are available in `package.json`:
+## 📦 Project Scope
 
-| Script    | Description                                       |
-|-----------|---------------------------------------------------|
-| `dev`     | Starts the Astro development server.              |
-| `start`   | Starts the Astro server in production mode.       |
-| `build`   | Builds the application for production.            |
-| `preview` | Previews the production build locally.            |
-| `astro`   | Provides access to the Astro CLI.                 |
+### Included in MVP
 
-## Project Scope
+-   **User Account Management**: Secure registration, login, profile management, and account deletion.
+-   **Travel Note Management**: Create, view, edit, delete, and copy travel notes.
+-   **AI Itinerary Generation**: Generate a structured plan from notes, user preferences, and parameters like budget and travel style.
+-   **New User Onboarding**: A pre-made sample note and plan are created for new users to demonstrate the app's functionality.
 
-### Key Features (MVP)
+### Not Included in MVP
 
--   **User Account System (F-01):** Secure user registration, login, profile management, and account deletion.
--   **Travel Note Management (F-02):** Users can create, view, edit, and delete their travel notes.
--   **AI-Powered Plan Generation (F-03):** The application generates structured travel itineraries based on user notes, preferences, and additional parameters (style, budget, transport).
--   **User Onboarding (F-04):** New users are provided with a sample note and a pre-generated plan to quickly understand the app's functionality.
-
-### Out of Scope (Post-MVP)
-
-The following features are not part of the initial MVP release:
--   Sharing trip plans between users.
--   Advanced multimedia support (e.g., photo analysis).
--   Detailed logistics planning (e.g., flight/hotel booking integrations).
--   Versioning of generated travel plans.
--   Manual editing of the generated itineraries.
+-   Sharing itineraries with other users.
+-   Rich media support (e.g., photos) within notes.
+-   Advanced logistics (e.g., flight/hotel booking integration).
+-   Storing multiple versions of a plan for a single note.
+-   Manual editing of a generated itinerary.
 -   Monetization features.
 
-## Project Status
+## 📊 Project Status
 
-The project is currently in the **MVP development phase**. The core functionalities are being built and refined to validate the main product hypothesis.
+**Current Status**: In Development 🚧
 
-## License
+This project is currently in the development phase for the Minimum Viable Product (MVP).
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+## 📄 License
+
+This project is licensed under the MIT License.
