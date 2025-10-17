@@ -1,0 +1,35 @@
+Etap 1
+1. Profil użytkownika może być dowolny. Nie będziemy na razie uzależniać wyglądu i funkcji aplikacji w zależności od persony.
+2. Minimalny zestaw informacji wystarczy. Warto urozmaicić dzienny plan pamiętając o posiłkach (restauracje) w odpowiedniej porze oraz odpoczynku pomiędzy dłuższym zwiedzaniem atrakcji.
+3. Tak, zacznijmy od prostego formularza tekstowego. Na razie to wystarczy.
+4. Przy rejestracji nie warunkujemy tworzenia konta gdy użytkownik nie określi kompletu informacji. Można tylko wymagać o podanie chociaż jednej informacji o sobie. Pozostałe będą mogły być dodawane w innym momencie, odblokowując dodatkowe funkcjonalności lub w inny sposób zachęcając do poszerzenia profilu.
+5. Plan wycieczki będzie sukcesem gdy użytkownik zaakceptuje go. Metryka będzie mogła jednak zawierać dodatkową, mniejszą wagę gdy użytkownik generuje zmieniony plan (taki sam plan ponownie wygenerowany nie będzie zwiększać metryki).
+6. Na razie to projekt szkoleniowy. Nie będziemy rozważać analizy kosztów.
+7. Przykładowa notatka z gotowym planem będzie wystarczająca.
+8. Email i imię w zupełności wystarczy.
+9. Nie będziemy monetyzować, ale dostęp do poszczególnych funkcji może być warunkowany stworzeniem bogatszego profilu.
+10. Własne notatki będą tym wyróżnikiem.
+
+Etap 2
+1. Prosty przycisk wystarczy.
+2. Zachętą będzie: odblokowanie sugestii rejestracji, następnie możliwość zwracania lepszych cenowo ofert (na początek nie będziemy zwracać tych najbardziej optymalnych jakość/cena)
+3. Twoja rekomendacja jest OK.
+4. Tak, ustawienia: wypoczynek/przygoda, rodzaj transportu i budżet (zdefiniowane, nazwane przedziały cenowe lub własne określanie budżetu)
+5. Niech będą te tagi w kilku kategoriach. 
+6. Tak, liczba kroków niech będzie możliwie mała.
+7. Tak, plany będą tylko do odczytu.
+8. Tak, jedna notatka demo wystarczy.
+9. Nie będziemy aż tak różnicować. 
+10. Masz rację, Twoja rekomendacja jest jak najbardziej OK.
+
+Etap 3
+1. Oczywiście, ogólne informacje o kategorich cenowych wystarczą.
+2. Niech będą etykiety opisowe, ale też możliwość określenia przedziału cenowego (opcja, można wykluczyć jeśli to zbyt trudne).
+3. Można ogólnie opisać, że atrakcje znajdują się w bliskiej odległości, więc można dojść pieszo, a jeśli wybierze samochód to że w okolicy znajdują się liczne (lub przeciwnie niewiele) parkingi. Co do komunikacji miejskiej - ogólne sugestie: dobra/słaba sieć itp.
+4. Lista dni z listą miejsc do odwiedzenia z podziałem na pory dnia, tak jak proponujesz jest OK.
+5. Tak, musi być taka informacja.
+6. Rekomendacja jest wystarczająca
+7. Oczywiście, będzie możliwość usuwania konta.
+8. Popieram rekomendację.
+9. Popieram rekomendację.
+10. Popieram rekomendację.
