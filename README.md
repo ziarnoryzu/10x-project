@@ -61,11 +61,14 @@ Follow these instructions to set up the project on your local machine.
 
     ```env
     # Supabase
-    PUBLIC_SUPABASE_URL="your-supabase-project-url"
-    PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+    SUPABASE_URL="your-supabase-project-url"
+    SUPABASE_ANON_KEY="your-supabase-anon-key"
 
     # OpenRouter.ai
     OPENROUTER_API_KEY="your-openrouter-api-key"
+    
+    # Development only
+    DEFAULT_USER_ID="your-default-user-id"
     ```
 
 5.  **Run the development server:**

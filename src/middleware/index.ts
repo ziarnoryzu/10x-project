@@ -2,14 +2,12 @@
 
 import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@supabase/supabase-js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "astro:env/server";
 import type { Database } from "../db/database.types";
-
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // Create Supabase client for this request
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       persistSession: false,
     },
