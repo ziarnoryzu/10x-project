@@ -2,7 +2,7 @@
 
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import type { NoteDTO } from "../../../types";
+import type { NoteDTO, NoteListItemDTO } from "../../../types";
 import type { SupabaseClient } from "../../../db/supabase.client";
 import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
@@ -56,12 +56,9 @@ export const GET: APIRoute = async ({ url, locals }) => {
       );
     }
 
-    const { page, limit, sort, order } = validationResult.data;
+    let { page, limit, sort, order } = validationResult.data;
 
-    // Step 2: Calculate pagination offsets
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
+    // Step 2: Get total count first to validate the requested page
     // Step 3: Get total count
     const { count, error: countError } = await supabase
       .from("notes")
@@ -83,10 +80,21 @@ export const GET: APIRoute = async ({ url, locals }) => {
       );
     }
 
+    // Step 3.5: Validate requested page and adjust if needed
+    const totalPages = Math.ceil((count || 0) / limit);
+    if (page > totalPages && totalPages > 0) {
+      // Requested page doesn't exist, return the last available page
+      page = totalPages;
+    }
+
+    // Step 3.6: Calculate pagination offsets
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
     // Step 4: Retrieve paginated notes
     const { data: notes, error: notesError } = await supabase
       .from("notes")
-      .select("*")
+      .select("id, title, updated_at")
       .eq("user_id", DEFAULT_USER_ID)
       .order(sort, { ascending: order === "asc" })
       .range(from, to);
@@ -106,21 +114,28 @@ export const GET: APIRoute = async ({ url, locals }) => {
       );
     }
 
-    // Step 5: Prepare response with pagination metadata
+    // Step 5: Check for travel plans for each note
+    // Use a single query to get all travel plan IDs for the current page of notes
+    const noteIds = notes.map((note) => note.id);
+    const { data: travelPlans } = await supabase.from("travel_plans").select("note_id").in("note_id", noteIds);
+
+    const travelPlanNoteIds = new Set(travelPlans?.map((tp) => tp.note_id) || []);
+
+    // Step 6: Prepare response with pagination metadata
+    const notesWithPlanStatus: NoteListItemDTO[] = notes.map((note) => ({
+      id: note.id,
+      title: note.title,
+      updated_at: note.updated_at,
+      has_travel_plan: travelPlanNoteIds.has(note.id),
+    }));
+
     const response = {
-      notes: notes.map((note) => ({
-        id: note.id,
-        user_id: note.user_id,
-        title: note.title,
-        content: note.content,
-        created_at: note.created_at,
-        updated_at: note.updated_at,
-      })),
+      notes: notesWithPlanStatus,
       pagination: {
         page,
         limit,
         total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+        totalPages,
       },
     };
 

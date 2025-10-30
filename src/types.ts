@@ -5,27 +5,6 @@ import type { Json } from "./db/database.types";
 // DTOs and Command Models derived from database entities and aligned with the API plan
 
 /**
- * ProfileDTO represents the public profile of a user.
- * Derived from the 'profiles' table.
- */
-export interface ProfileDTO {
-  id: string;
-  name: string;
-  preferences: Json;
-  created_at: string;
-  updated_at: string;
-}
-
-/**
- * UpdateProfileDTO is used to update a user's profile.
- * It requires the 'name' field and optionally 'preferences'.
- */
-export interface UpdateProfileDTO {
-  name: string;
-  preferences?: Json;
-}
-
-/**
  * NoteDTO represents a travel note.
  * Derived from the 'notes' table.
  */
@@ -53,6 +32,40 @@ export interface CreateNoteDTO {
  * Partial update of 'title' and 'content'.
  */
 export type UpdateNoteDTO = Partial<Pick<NoteDTO, "title" | "content">>;
+
+/**
+ * NoteListItemDTO represents a note in the notes list view.
+ * This is a lighter version of NoteDTO for list displays.
+ */
+export interface NoteListItemDTO {
+  id: string;
+  title: string;
+  updated_at: string;
+  has_travel_plan: boolean;
+}
+
+/**
+ * PaginationViewModel represents pagination metadata for list views.
+ * Used by components to display and control pagination.
+ */
+export interface PaginationViewModel {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+/**
+ * NoteListItemViewModel is the view model for the NoteListItem component.
+ * Contains formatted data ready for display, including computed properties.
+ */
+export interface NoteListItemViewModel {
+  id: string;
+  title: string;
+  lastModified: string; // Formatted date, e.g. "2 dni temu"
+  hasTravelPlan: boolean;
+  href: string; // Path to note details, e.g. /app/notes/some-uuid
+}
 
 /**
  * TravelPlanDTO represents an AI-generated travel plan.
@@ -88,4 +101,166 @@ export interface GenerateTravelPlanCommand {
 export interface UpdateTravelPlanCommand {
   confirm: boolean;
   options?: TravelPlanOptions;
+}
+
+/**
+ * UserProfileDTO represents the full user profile data.
+ * Used for displaying and managing user profile information.
+ */
+export interface UserProfileDTO {
+  id: string;
+  email: string;
+  name: string;
+  preferences: string[];
+  created_at: string;
+}
+
+/**
+ * UpdateUserProfileDTO is used to update user profile information.
+ * Supports partial updates of name and preferences.
+ */
+export interface UpdateUserProfileDTO {
+  name?: string;
+  preferences?: string[];
+}
+
+/**
+ * ChangePasswordDTO is used for password change operations.
+ * Requires current password for verification and new password.
+ */
+export interface ChangePasswordDTO {
+  current_password: string;
+  new_password: string;
+}
+
+/**
+ * GenerationOptions represents personalization options for travel plan generation.
+ * Used in GeneratePlanModal for user preferences.
+ */
+export interface GenerationOptions {
+  style: "adventure" | "leisure";
+  transport: "car" | "public" | "walking";
+  budget: "economy" | "standard" | "luxury";
+}
+
+/**
+ * UpdatePlanRequest is the payload for updating/regenerating an existing travel plan.
+ * Requires confirmation flag to prevent accidental overwrites.
+ */
+export interface UpdatePlanRequest {
+  confirm: boolean;
+  options?: Partial<GenerationOptions>;
+}
+
+/**
+ * PlanActivity represents a single activity in a travel plan.
+ * Contains details about the activity including logistics information.
+ */
+export interface PlanActivity {
+  name: string;
+  description: string;
+  priceCategory: string;
+  logistics: {
+    address?: string;
+    mapLink?: string;
+    estimatedTime?: string;
+  };
+}
+
+/**
+ * TravelDay represents a single day in the travel itinerary.
+ * Activities are organized by time of day (morning, afternoon, evening).
+ */
+export interface TravelDay {
+  day: number;
+  title: string;
+  activities: {
+    morning: PlanActivity[];
+    afternoon: PlanActivity[];
+    evening: PlanActivity[];
+  };
+}
+
+/**
+ * TravelPlanContent is the structured content of a travel plan.
+ * Contains the complete itinerary and disclaimer.
+ */
+export interface TravelPlanContent {
+  days: TravelDay[];
+  disclaimer: string;
+}
+
+/**
+ * TypedTravelPlan extends TravelPlanDTO with strongly typed content.
+ * Used for type-safe rendering of travel plan details.
+ */
+export interface TypedTravelPlan extends Omit<TravelPlanDTO, "content"> {
+  content: TravelPlanContent;
+}
+
+/**
+ * NoteWithPlan combines a note with its optional travel plan.
+ * Used in components that need both note and plan information.
+ */
+export interface NoteWithPlan extends NoteDTO {
+  travel_plan: TravelPlanDTO | null;
+}
+
+/**
+ * AutosaveStatusViewModel represents the state of autosave operations.
+ * Used to track and display save status in the NoteEditor component.
+ */
+export type AutosaveStatusViewModel = "idle" | "saving" | "success" | "error";
+
+/**
+ * NoteEditorViewModel is the view model for the NoteEditor component.
+ * Contains all data needed to render the note editing form with autosave status.
+ */
+export interface NoteEditorViewModel {
+  title: string;
+  content: string | null;
+  status: AutosaveStatusViewModel;
+  lastSavedTimestamp: string;
+}
+
+/**
+ * NoteWithPlanViewModel represents the complete state for the note detail view.
+ * Combines note data with computed properties for UI rendering.
+ */
+export interface NoteWithPlanViewModel {
+  id: string;
+  title: string;
+  content: string | null;
+  createdAt: string;
+  updatedAt: string;
+  travelPlan: TypedTravelPlan | null;
+  wordCount: number;
+  isReadyForPlanGeneration: boolean;
+}
+
+/**
+ * NavComponentProps defines props for navigation components.
+ * Used by Sidebar and MobileNav to determine the active page.
+ */
+export interface NavComponentProps {
+  activePath: string;
+}
+
+/**
+ * NavLinkProps defines props for a single navigation link.
+ * Used by NavLink component to render and style navigation items.
+ */
+export interface NavLinkProps {
+  href: string;
+  label: string;
+  isActive: boolean;
+}
+
+/**
+ * NavItem represents a single navigation item in the app.
+ * Defines the structure for navigation links in Sidebar and MobileNav.
+ */
+export interface NavItem {
+  href: string;
+  label: string;
 }

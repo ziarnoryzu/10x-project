@@ -9,7 +9,7 @@ import node from "@astrojs/node";
 // https://astro.build/config
 export default defineConfig({
   site: "https://ziarnoryzu.github.io/10x-project/",
-  base: "/10x-project",
+  // base: "/10x-project", // Removed for local development
   output: "server",
   integrations: [react(), sitemap()],
   server: { port: 3000 },

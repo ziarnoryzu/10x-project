@@ -124,6 +124,51 @@ export const GET: APIRoute = async ({ params, locals }) => {
 };
 
 /**
+ * HEAD /api/notes/{noteId}/travel-plan
+ *
+ * Checks if a travel plan exists for the note without returning the content.
+ * Returns 200 if exists, 404 if not found.
+ */
+export const HEAD: APIRoute = async ({ params, locals }) => {
+  // Type assertion for Supabase client
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = (locals as any).supabase as SupabaseClient;
+
+  try {
+    // Step 1: Validate noteId parameter
+    const noteIdValidation = UUIDSchema.safeParse(params.noteId);
+    if (!noteIdValidation.success) {
+      return new Response(null, { status: 400 });
+    }
+
+    const noteId = noteIdValidation.data;
+
+    // Step 2: Check if note exists and user has access
+    const { data: note } = await supabase
+      .from("notes")
+      .select("id")
+      .eq("id", noteId)
+      .eq("user_id", DEFAULT_USER_ID)
+      .single();
+
+    if (!note) {
+      return new Response(null, { status: 404 });
+    }
+
+    // Step 3: Check if travel plan exists
+    const { data: travelPlan } = await supabase.from("travel_plans").select("id").eq("note_id", noteId).single();
+
+    if (!travelPlan) {
+      return new Response(null, { status: 404 });
+    }
+
+    return new Response(null, { status: 200 });
+  } catch {
+    return new Response(null, { status: 500 });
+  }
+};
+
+/**
  * PUT /api/notes/{noteId}/travel-plan
  *
  * Allows the user to re-generate or update the travel plan for the note.

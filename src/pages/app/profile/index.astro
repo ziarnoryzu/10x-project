@@ -1,0 +1,8 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import { ProfileView } from "../../../components/views/ProfileView";
+---
+
+<MainLayout title="Profil użytkownika">
+  <ProfileView client:load />
+</MainLayout>

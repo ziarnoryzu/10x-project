@@ -1,0 +1,8 @@
+---
+import MainLayout from "../../../layouts/MainLayout.astro";
+import { NotesListView } from "../../../components/views/NotesListView";
+---
+
+<MainLayout title="Moje notatki">
+  <NotesListView client:load />
+</MainLayout>

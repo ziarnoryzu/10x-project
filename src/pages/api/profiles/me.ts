@@ -2,7 +2,7 @@
 
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import type { ProfileDTO } from "../../../types";
+import type { UserProfileDTO } from "../../../types";
 import type { SupabaseClient } from "../../../db/supabase.client";
 import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 import type { Json } from "../../../db/database.types";
@@ -11,8 +11,10 @@ export const prerender = false;
 
 // Zod schema for update request body
 const UpdateProfileSchema = z.object({
-  name: z.string().min(1, "Name cannot be empty"),
-  preferences: z.record(z.unknown()).optional(),
+  name: z.string().min(1, "Name cannot be empty").optional(),
+  preferences: z.array(z.string()).optional(),
+}).refine((data) => data.name !== undefined || data.preferences !== undefined, {
+  message: "At least one field (name or preferences) must be provided",
 });
 
 /**
@@ -47,13 +49,26 @@ export const GET: APIRoute = async ({ locals }) => {
       );
     }
 
-    // Step 3: Prepare response
-    const response: ProfileDTO = {
+    // Step 3: Parse preferences from Json to string[]
+    let preferences: string[] = [];
+    if (profile.preferences && typeof profile.preferences === 'object' && !Array.isArray(profile.preferences)) {
+      // If preferences is an object (Record<string, string[]>), flatten all values
+      preferences = Object.values(profile.preferences as Record<string, unknown>)
+        .flat()
+        .filter((item): item is string => typeof item === 'string');
+    } else if (Array.isArray(profile.preferences)) {
+      // If preferences is already an array, use it directly
+      preferences = profile.preferences.filter((item): item is string => typeof item === 'string');
+    }
+
+    // Step 4: Prepare response
+    // TODO: Replace mock email with real email from Supabase Auth when authentication is implemented
+    const response: UserProfileDTO = {
       id: profile.id,
+      email: "user@example.com", // Mock email for now
       name: profile.name,
-      preferences: profile.preferences,
+      preferences,
       created_at: profile.created_at,
-      updated_at: profile.updated_at,
     };
 
     return new Response(JSON.stringify(response), {
@@ -123,8 +138,12 @@ export const PUT: APIRoute = async ({ request, locals }) => {
     const { name, preferences } = validationResult.data;
 
     // Step 3: Prepare update data
-    const updateData: { name: string; preferences?: Json } = { name };
+    const updateData: { name?: string; preferences?: Json } = {};
+    if (name !== undefined) {
+      updateData.name = name;
+    }
     if (preferences !== undefined) {
+      // Convert string[] to Json for database storage
       updateData.preferences = preferences as Json;
     }
 
@@ -165,13 +184,26 @@ export const PUT: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Step 5: Prepare response
-    const response: ProfileDTO = {
+    // Step 5: Parse preferences from Json to string[]
+    let updatedPreferences: string[] = [];
+    if (updatedProfile.preferences && typeof updatedProfile.preferences === 'object' && !Array.isArray(updatedProfile.preferences)) {
+      // If preferences is an object (Record<string, string[]>), flatten all values
+      updatedPreferences = Object.values(updatedProfile.preferences as Record<string, unknown>)
+        .flat()
+        .filter((item): item is string => typeof item === 'string');
+    } else if (Array.isArray(updatedProfile.preferences)) {
+      // If preferences is already an array, use it directly
+      updatedPreferences = updatedProfile.preferences.filter((item): item is string => typeof item === 'string');
+    }
+
+    // Step 6: Prepare response
+    // TODO: Replace mock email with real email from Supabase Auth when authentication is implemented
+    const response: UserProfileDTO = {
       id: updatedProfile.id,
+      email: "user@example.com", // Mock email for now
       name: updatedProfile.name,
-      preferences: updatedProfile.preferences,
+      preferences: updatedPreferences,
       created_at: updatedProfile.created_at,
-      updated_at: updatedProfile.updated_at,
     };
 
     return new Response(JSON.stringify(response), {
@@ -185,6 +217,125 @@ export const PUT: APIRoute = async ({ request, locals }) => {
       JSON.stringify({
         error: "Internal Server Error",
         message: "An unexpected error occurred while updating the profile",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+/**
+ * DELETE /api/profiles/me
+ *
+ * Permanently deletes the authenticated user's account and all associated data.
+ * This includes:
+ * - All travel plans associated with user's notes
+ * - All user's notes
+ * - User's profile
+ * - User's auth account (if implemented)
+ */
+export const DELETE: APIRoute = async ({ locals }) => {
+  // Type assertion for Supabase client
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = (locals as any).supabase as SupabaseClient;
+
+  try {
+    // Step 1: Delete all travel plans associated with user's notes
+    // First, get all note IDs for the user
+    const { data: userNotes, error: notesListError } = await supabase
+      .from("notes")
+      .select("id")
+      .eq("user_id", DEFAULT_USER_ID);
+
+    if (notesListError) {
+      // eslint-disable-next-line no-console
+      console.error("Error fetching user notes for deletion:", notesListError);
+      // Continue with deletion even if this fails
+    }
+
+    // Delete travel plans for these notes
+    if (userNotes && userNotes.length > 0) {
+      const noteIds = userNotes.map((note) => note.id);
+      const { error: plansDeleteError } = await supabase
+        .from("travel_plans")
+        .delete()
+        .in("note_id", noteIds);
+
+      if (plansDeleteError) {
+        // eslint-disable-next-line no-console
+        console.error("Error deleting travel plans:", plansDeleteError);
+        // Continue with deletion even if this fails
+      }
+    }
+
+    // Step 2: Delete all user's notes
+    const { error: notesDeleteError } = await supabase
+      .from("notes")
+      .delete()
+      .eq("user_id", DEFAULT_USER_ID);
+
+    if (notesDeleteError) {
+      // eslint-disable-next-line no-console
+      console.error("Error deleting notes:", notesDeleteError);
+      return new Response(
+        JSON.stringify({
+          error: "Internal Server Error",
+          message: "Failed to delete user notes",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Step 3: Delete user's profile
+    const { error: profileDeleteError } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", DEFAULT_USER_ID);
+
+    if (profileDeleteError) {
+      // eslint-disable-next-line no-console
+      console.error("Error deleting profile:", profileDeleteError);
+      return new Response(
+        JSON.stringify({
+          error: "Internal Server Error",
+          message: "Failed to delete user profile",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Step 4: Delete user from Supabase Auth (optional - requires admin privileges)
+    // TODO: Implement when proper authentication is set up
+    // const { error: authDeleteError } = await supabase.auth.admin.deleteUser(DEFAULT_USER_ID);
+    // if (authDeleteError) {
+    //   console.error("Error deleting auth user:", authDeleteError);
+    // }
+
+    // Step 5: Return success
+    return new Response(
+      JSON.stringify({
+        message: "Account deleted successfully",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Unexpected error in DELETE /api/profiles/me:", error);
+    return new Response(
+      JSON.stringify({
+        error: "Internal Server Error",
+        message: "An unexpected error occurred while deleting the account",
       }),
       {
         status: 500,
