@@ -79,7 +79,7 @@ export function useNotesList(page = 1): UseNotesListReturn {
 
       // Transform DTOs to ViewModels
       const viewModels = data.notes.map(transformNoteToViewModel);
-      
+
       setNotes(viewModels);
       setPagination(data.pagination);
     } catch (err) {

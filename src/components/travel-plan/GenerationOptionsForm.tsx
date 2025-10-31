@@ -75,7 +75,12 @@ export function GenerationOptionsForm({ existingPlan, isSubmitting, onSubmit }: 
       {existingPlan && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -86,7 +91,8 @@ export function GenerationOptionsForm({ existingPlan, isSubmitting, onSubmit }: 
             <div className="flex-1">
               <h4 className="text-sm font-semibold text-amber-900 mb-1">Istniejący plan zostanie nadpisany</h4>
               <p className="text-sm text-amber-700">
-                Dla tej notatki istnieje już wygenerowany plan. Wygenerowanie nowego planu spowoduje nadpisanie poprzedniego.
+                Dla tej notatki istnieje już wygenerowany plan. Wygenerowanie nowego planu spowoduje nadpisanie
+                poprzedniego.
               </p>
             </div>
           </div>
@@ -171,7 +177,12 @@ export function GenerationOptionsForm({ existingPlan, isSubmitting, onSubmit }: 
         <Button type="submit" disabled={isButtonDisabled} className="w-full" size="lg">
           {isSubmitting ? (
             <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path
                   className="opacity-75"
@@ -200,4 +211,3 @@ export function GenerationOptionsForm({ existingPlan, isSubmitting, onSubmit }: 
     </form>
   );
 }
-

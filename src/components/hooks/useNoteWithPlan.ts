@@ -69,4 +69,3 @@ export function useNoteWithPlan(noteId: string): UseNoteWithPlanReturn {
     refetch: fetchNoteWithPlan,
   };
 }
-

@@ -10,12 +10,14 @@ import type { Json } from "../../../db/database.types";
 export const prerender = false;
 
 // Zod schema for update request body
-const UpdateProfileSchema = z.object({
-  name: z.string().min(1, "Name cannot be empty").optional(),
-  preferences: z.array(z.string()).optional(),
-}).refine((data) => data.name !== undefined || data.preferences !== undefined, {
-  message: "At least one field (name or preferences) must be provided",
-});
+const UpdateProfileSchema = z
+  .object({
+    name: z.string().min(1, "Name cannot be empty").optional(),
+    preferences: z.array(z.string()).optional(),
+  })
+  .refine((data) => data.name !== undefined || data.preferences !== undefined, {
+    message: "At least one field (name or preferences) must be provided",
+  });
 
 /**
  * GET /api/profiles/me
@@ -51,14 +53,14 @@ export const GET: APIRoute = async ({ locals }) => {
 
     // Step 3: Parse preferences from Json to string[]
     let preferences: string[] = [];
-    if (profile.preferences && typeof profile.preferences === 'object' && !Array.isArray(profile.preferences)) {
+    if (profile.preferences && typeof profile.preferences === "object" && !Array.isArray(profile.preferences)) {
       // If preferences is an object (Record<string, string[]>), flatten all values
       preferences = Object.values(profile.preferences as Record<string, unknown>)
         .flat()
-        .filter((item): item is string => typeof item === 'string');
+        .filter((item): item is string => typeof item === "string");
     } else if (Array.isArray(profile.preferences)) {
       // If preferences is already an array, use it directly
-      preferences = profile.preferences.filter((item): item is string => typeof item === 'string');
+      preferences = profile.preferences.filter((item): item is string => typeof item === "string");
     }
 
     // Step 4: Prepare response
@@ -186,14 +188,18 @@ export const PUT: APIRoute = async ({ request, locals }) => {
 
     // Step 5: Parse preferences from Json to string[]
     let updatedPreferences: string[] = [];
-    if (updatedProfile.preferences && typeof updatedProfile.preferences === 'object' && !Array.isArray(updatedProfile.preferences)) {
+    if (
+      updatedProfile.preferences &&
+      typeof updatedProfile.preferences === "object" &&
+      !Array.isArray(updatedProfile.preferences)
+    ) {
       // If preferences is an object (Record<string, string[]>), flatten all values
       updatedPreferences = Object.values(updatedProfile.preferences as Record<string, unknown>)
         .flat()
-        .filter((item): item is string => typeof item === 'string');
+        .filter((item): item is string => typeof item === "string");
     } else if (Array.isArray(updatedProfile.preferences)) {
       // If preferences is already an array, use it directly
-      updatedPreferences = updatedProfile.preferences.filter((item): item is string => typeof item === 'string');
+      updatedPreferences = updatedProfile.preferences.filter((item): item is string => typeof item === "string");
     }
 
     // Step 6: Prepare response
@@ -258,10 +264,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     // Delete travel plans for these notes
     if (userNotes && userNotes.length > 0) {
       const noteIds = userNotes.map((note) => note.id);
-      const { error: plansDeleteError } = await supabase
-        .from("travel_plans")
-        .delete()
-        .in("note_id", noteIds);
+      const { error: plansDeleteError } = await supabase.from("travel_plans").delete().in("note_id", noteIds);
 
       if (plansDeleteError) {
         // eslint-disable-next-line no-console
@@ -271,10 +274,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     }
 
     // Step 2: Delete all user's notes
-    const { error: notesDeleteError } = await supabase
-      .from("notes")
-      .delete()
-      .eq("user_id", DEFAULT_USER_ID);
+    const { error: notesDeleteError } = await supabase.from("notes").delete().eq("user_id", DEFAULT_USER_ID);
 
     if (notesDeleteError) {
       // eslint-disable-next-line no-console
@@ -292,10 +292,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     }
 
     // Step 3: Delete user's profile
-    const { error: profileDeleteError } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", DEFAULT_USER_ID);
+    const { error: profileDeleteError } = await supabase.from("profiles").delete().eq("id", DEFAULT_USER_ID);
 
     if (profileDeleteError) {
       // eslint-disable-next-line no-console

@@ -1,11 +1,5 @@
 import { useState } from "react";
-import type {
-  GenerationOptions,
-  TravelPlanDTO,
-  TypedTravelPlan,
-  TravelPlanContent,
-  UpdatePlanRequest,
-} from "@/types";
+import type { GenerationOptions, TravelPlanDTO, TypedTravelPlan, TravelPlanContent, UpdatePlanRequest } from "@/types";
 
 type GeneratePlanStatus = "idle" | "loading" | "success" | "error";
 
@@ -111,15 +105,11 @@ export function useGeneratePlan(
 
       // Determine endpoint and method
       const isUpdate = existingPlan !== null;
-      const endpoint = isUpdate
-        ? `/api/notes/${noteId}/travel-plan`
-        : `/api/notes/${noteId}/generate-plan`;
+      const endpoint = isUpdate ? `/api/notes/${noteId}/travel-plan` : `/api/notes/${noteId}/generate-plan`;
       const method = isUpdate ? "PUT" : "POST";
 
       // Prepare request body
-      const body = isUpdate
-        ? ({ confirm: true, options } satisfies UpdatePlanRequest)
-        : { options };
+      const body = isUpdate ? ({ confirm: true, options } satisfies UpdatePlanRequest) : { options };
 
       // Make API request with timeout
       const response = await fetchWithTimeout(
@@ -152,7 +142,7 @@ export function useGeneratePlan(
 
       // Parse and validate response
       const responseData = await response.json();
-      
+
       // Extract travel plan from response (handle both wrapped and direct responses)
       const planData: TravelPlanDTO = responseData.travel_plan || responseData;
 
@@ -208,4 +198,3 @@ export function useGeneratePlan(
     reset,
   };
 }
-

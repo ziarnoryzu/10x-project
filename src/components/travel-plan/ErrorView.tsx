@@ -42,4 +42,3 @@ export function ErrorView({ errorMessage, onRetry }: ErrorViewProps) {
     </div>
   );
 }
-

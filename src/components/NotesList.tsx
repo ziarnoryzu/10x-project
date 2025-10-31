@@ -21,4 +21,3 @@ export const NotesList = memo<NotesListProps>(function NotesList({ notes, curren
     </div>
   );
 });
-

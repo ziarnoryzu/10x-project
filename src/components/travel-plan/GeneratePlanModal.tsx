@@ -77,11 +77,7 @@ export function GeneratePlanModal({ note, isOpen, onOpenChange, onSuccess }: Gen
         <div className="flex-1 overflow-hidden">
           {/* Idle state: Show options form */}
           {status === "idle" && (
-            <GenerationOptionsForm
-              existingPlan={note.travel_plan}
-              isSubmitting={false}
-              onSubmit={handleGenerate}
-            />
+            <GenerationOptionsForm existingPlan={note.travel_plan} isSubmitting={false} onSubmit={handleGenerate} />
           )}
 
           {/* Loading state: Show spinner */}
@@ -97,4 +93,3 @@ export function GeneratePlanModal({ note, isOpen, onOpenChange, onSuccess }: Gen
     </Dialog>
   );
 }
-

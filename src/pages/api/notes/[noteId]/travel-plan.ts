@@ -6,6 +6,15 @@ import type { TravelPlanDTO } from "../../../../types";
 import { travelPlanService } from "../../../../lib/services/travel-plan.service";
 import type { SupabaseClient } from "../../../../db/supabase.client";
 import { DEFAULT_USER_ID } from "../../../../db/supabase.client";
+import {
+  OpenRouterError,
+  AuthenticationError,
+  BadRequestError,
+  RateLimitError,
+  ServerError,
+  InvalidJSONResponseError,
+  SchemaValidationError,
+} from "../../../../lib/errors";
 
 export const prerender = false;
 
@@ -280,7 +289,28 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
-    // Step 7: Check if travel plan exists
+    // Step 7: Retrieve user profile with preferences
+    const { data: userProfile } = await supabase
+      .from("profiles")
+      .select("preferences")
+      .eq("id", DEFAULT_USER_ID)
+      .single();
+
+    // Parse preferences from Json to string[]
+    let userPreferences: string[] = [];
+    if (userProfile?.preferences) {
+      if (typeof userProfile.preferences === "object" && !Array.isArray(userProfile.preferences)) {
+        // If preferences is an object (Record<string, string[]>), flatten all values
+        userPreferences = Object.values(userProfile.preferences as Record<string, unknown>)
+          .flat()
+          .filter((item): item is string => typeof item === "string");
+      } else if (Array.isArray(userProfile.preferences)) {
+        // If preferences is already an array, use it directly
+        userPreferences = userProfile.preferences.filter((item): item is string => typeof item === "string");
+      }
+    }
+
+    // Step 8: Check if travel plan exists
     const { data: existingPlan } = await supabase.from("travel_plans").select("id").eq("note_id", noteId).single();
 
     if (!existingPlan) {
@@ -296,11 +326,11 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
-    // Step 8: Regenerate travel plan
+    // Step 9: Regenerate travel plan with user preferences
     const noteContent = note.content as string;
-    const planContent = await travelPlanService.generatePlan(noteContent, options);
+    const planContent = await travelPlanService.generatePlan(noteContent, options, userPreferences);
 
-    // Step 9: Update travel plan in database
+    // Step 10: Update travel plan in database
     const { data: updatedPlan, error: updateError } = await supabase
       .from("travel_plans")
       .update({ content: planContent })
@@ -323,7 +353,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
-    // Step 10: Prepare response
+    // Step 11: Prepare response
     const response: TravelPlanDTO = {
       id: updatedPlan.id,
       note_id: updatedPlan.note_id,
@@ -338,7 +368,91 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     });
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error("Unexpected error in PUT /api/notes/{noteId}/travel-plan:", error);
+    console.error("Error in PUT /api/notes/{noteId}/travel-plan:", error);
+
+    // Handle OpenRouter-specific errors
+    if (error instanceof AuthenticationError) {
+      return new Response(
+        JSON.stringify({
+          error: "Configuration Error",
+          message: "AI service configuration error. Please contact support.",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (error instanceof RateLimitError) {
+      return new Response(
+        JSON.stringify({
+          error: "Rate Limit Exceeded",
+          message: "Too many requests. Please try again in a few moments.",
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": "60", // Suggest retry after 60 seconds
+          },
+        }
+      );
+    }
+
+    if (error instanceof BadRequestError) {
+      return new Response(
+        JSON.stringify({
+          error: "Bad Request",
+          message: `Invalid request to AI service: ${error.message}`,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (error instanceof InvalidJSONResponseError) {
+      return new Response(
+        JSON.stringify({
+          error: "AI Response Error",
+          message: "AI service returned an invalid response. Please try again.",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (error instanceof SchemaValidationError) {
+      return new Response(
+        JSON.stringify({
+          error: "AI Response Error",
+          message: "AI service returned data in an unexpected format. Please try again.",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (error instanceof ServerError || error instanceof OpenRouterError) {
+      return new Response(
+        JSON.stringify({
+          error: "Service Unavailable",
+          message: "AI service is currently unavailable. Please try again later.",
+        }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Handle any other unexpected errors
     return new Response(
       JSON.stringify({
         error: "Internal Server Error",

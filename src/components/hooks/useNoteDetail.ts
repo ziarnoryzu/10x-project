@@ -79,6 +79,7 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
   // Refs
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedRef = useRef<string>("");
+  const pendingChangesRef = useRef<UpdateNoteDTO>({});
 
   /**
    * Fetch note and travel plan data
@@ -105,21 +106,18 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
 
       // Fetch travel plan (may not exist)
       let travelPlan: TypedTravelPlan | null = null;
-      try {
-        const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+      const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
 
-        if (planResponse.ok) {
-          const planData: TravelPlanDTO = await planResponse.json();
-          travelPlan = {
-            ...planData,
-            content: planData.content as TravelPlanContent,
-          };
-        }
-      } catch {
-        // Plan doesn't exist, which is fine
+      // 404 is expected when plan doesn't exist yet - don't treat as error
+      if (planResponse.ok) {
+        const planData: TravelPlanDTO = await planResponse.json();
+        travelPlan = {
+          ...planData,
+          content: planData.content as TravelPlanContent,
+        };
       }
 
       // Calculate computed properties
@@ -154,34 +152,36 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
   const refetchPlan = useCallback(async () => {
     if (!note) return;
 
-    try {
-      const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
+    const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
 
-      let travelPlan: TypedTravelPlan | null = null;
-      if (planResponse.ok) {
-        const planData: TravelPlanDTO = await planResponse.json();
-        travelPlan = {
-          ...planData,
-          content: planData.content as TravelPlanContent,
-        };
-      }
-
-      setNote((prev) => (prev ? { ...prev, travelPlan } : null));
-    } catch {
-      // Silently fail - plan might not exist yet
+    // 404 is expected when plan doesn't exist yet - don't treat as error
+    let travelPlan: TypedTravelPlan | null = null;
+    if (planResponse.ok) {
+      const planData: TravelPlanDTO = await planResponse.json();
+      travelPlan = {
+        ...planData,
+        content: planData.content as TravelPlanContent,
+      };
     }
+
+    setNote((prev) => (prev ? { ...prev, travelPlan } : null));
   }, [noteId, note]);
 
   /**
    * Update note with debounced autosave
+   * Accumulates changes when multiple edits happen in quick succession
    */
   const updateNote = useCallback(
     async (changes: UpdateNoteDTO) => {
-      if (!note) return;
-
+      // Accumulate changes in ref (merge with pending changes)
+      pendingChangesRef.current = {
+        ...pendingChangesRef.current,
+        ...changes,
+      };
+      
       // Optimistic update
       setNote((prev) => {
         if (!prev) return null;
@@ -195,13 +195,19 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
         };
       });
 
-      // Clear pending save
+      // Clear pending save timeout (but keep accumulated changes in ref)
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-
+      
       // Debounced save
       saveTimeoutRef.current = setTimeout(async () => {
+        // Capture all accumulated changes
+        const changesToSave = { ...pendingChangesRef.current };
+        
+        // Clear pending changes since we're saving them now
+        pendingChangesRef.current = {};
+        
         setAutosaveStatus("saving");
         setError(null);
 
@@ -209,7 +215,7 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
           const response = await fetch(`/api/notes/${noteId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(changes),
+            body: JSON.stringify(changesToSave),
           });
 
           if (!response.ok) {
@@ -221,15 +227,21 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
 
           setAutosaveStatus("success");
 
-          // Update updatedAt timestamp
-          setNote((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  updatedAt: formatRelativeTime(updatedNote.updated_at),
-                }
-              : null
-          );
+          // Sync with server response to ensure consistency (preserve travelPlan)
+          setNote((prev) => {
+            if (!prev) return null;
+            const wordCount = countWords(updatedNote.content);
+            return {
+              ...prev,
+              title: updatedNote.title,
+              content: updatedNote.content,
+              updatedAt: formatRelativeTime(updatedNote.updated_at),
+              wordCount,
+              isReadyForPlanGeneration: wordCount >= 10,
+              // Preserve travelPlan as it's not part of the note update
+              travelPlan: prev.travelPlan,
+            };
+          });
 
           // Reset to idle after showing success
           setTimeout(() => setAutosaveStatus("idle"), 2000);
@@ -240,7 +252,7 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
         }
       }, 1500); // 1.5 second debounce as per spec
     },
-    [note, noteId]
+    [noteId]
   );
 
   /**
@@ -327,4 +339,3 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
     refetchPlan,
   };
 }
-

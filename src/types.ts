@@ -264,3 +264,25 @@ export interface NavItem {
   href: string;
   label: string;
 }
+
+/**
+ * ChatCompletionParams defines the parameters for a chat completion request.
+ * Used by OpenRouterService to generate text responses from LLMs.
+ */
+export interface ChatCompletionParams {
+  systemPrompt: string;
+  userPrompt: string;
+  model?: string;
+  temperature?: number;
+  max_tokens?: number;
+}
+
+/**
+ * StructuredDataParams defines parameters for structured data generation.
+ * Extends ChatCompletionParams with schema information for type-safe JSON outputs.
+ */
+export interface StructuredDataParams<T extends import("zod").ZodTypeAny> extends ChatCompletionParams {
+  schemaName: string;
+  schemaDescription: string;
+  schema: T;
+}

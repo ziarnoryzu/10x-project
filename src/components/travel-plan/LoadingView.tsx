@@ -21,4 +21,3 @@ export function LoadingView() {
     </div>
   );
 }
-

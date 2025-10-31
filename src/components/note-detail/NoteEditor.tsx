@@ -62,9 +62,7 @@ export function NoteEditor({ note, wordCount, onNoteChange }: NoteEditorProps) {
         <div className="flex items-center justify-between text-sm">
           <p className="text-gray-600 dark:text-gray-400">
             Liczba słów:{" "}
-            <span className={wordCount >= 10 ? "text-green-600 dark:text-green-400 font-medium" : ""}>
-              {wordCount}
-            </span>
+            <span className={wordCount >= 10 ? "text-green-600 dark:text-green-400 font-medium" : ""}>{wordCount}</span>
             {wordCount < 10 && <span className="text-gray-500"> (minimum 10 do generowania planu)</span>}
           </p>
 
@@ -99,4 +97,3 @@ export function NoteEditor({ note, wordCount, onNoteChange }: NoteEditorProps) {
     </div>
   );
 }
-

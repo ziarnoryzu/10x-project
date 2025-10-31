@@ -12,39 +12,39 @@ interface GeneratedPlanViewProps {
  */
 function getPriceCategoryColor(category: string): string {
   const lowerCategory = category.toLowerCase();
-  
+
   // Free activities
-  if (lowerCategory.includes('bezpłatne') || lowerCategory.includes('free')) {
-    return 'bg-green-100 text-green-700 border border-green-200';
+  if (lowerCategory.includes("bezpłatne") || lowerCategory.includes("free")) {
+    return "bg-green-100 text-green-700 border border-green-200";
   }
-  
+
   // Luxury/Premium activities (high prices or luxury keywords)
   if (
-    lowerCategory.includes('luksus') || 
-    lowerCategory.includes('luxury') || 
-    lowerCategory.includes('premium') ||
-    lowerCategory.includes('150') ||
-    lowerCategory.includes('200') ||
-    lowerCategory.includes('100-150') ||
-    lowerCategory.includes('80-120')
+    lowerCategory.includes("luksus") ||
+    lowerCategory.includes("luxury") ||
+    lowerCategory.includes("premium") ||
+    lowerCategory.includes("150") ||
+    lowerCategory.includes("200") ||
+    lowerCategory.includes("100-150") ||
+    lowerCategory.includes("80-120")
   ) {
-    return 'bg-purple-100 text-purple-700 border border-purple-200';
+    return "bg-purple-100 text-purple-700 border border-purple-200";
   }
-  
+
   // Economy/Budget activities (low prices)
   if (
-    lowerCategory.includes('ekonomi') || 
-    lowerCategory.includes('economy') ||
-    lowerCategory.includes('5-10') ||
-    lowerCategory.includes('10-20') ||
-    lowerCategory.includes('15-25') ||
-    lowerCategory.includes('ulgowy')
+    lowerCategory.includes("ekonomi") ||
+    lowerCategory.includes("economy") ||
+    lowerCategory.includes("5-10") ||
+    lowerCategory.includes("10-20") ||
+    lowerCategory.includes("15-25") ||
+    lowerCategory.includes("ulgowy")
   ) {
-    return 'bg-blue-100 text-blue-700 border border-blue-200';
+    return "bg-blue-100 text-blue-700 border border-blue-200";
   }
-  
+
   // Standard/Mid-range (default)
-  return 'bg-amber-100 text-amber-700 border border-amber-200';
+  return "bg-amber-100 text-amber-700 border border-amber-200";
 }
 
 /**
@@ -55,7 +55,9 @@ function ActivityCard({ activity }: { activity: PlanActivity }) {
     <div className="bg-gray-50 rounded-lg p-4 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <h5 className="font-semibold text-gray-900">{activity.name}</h5>
-        <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap font-medium ${getPriceCategoryColor(activity.priceCategory)}`}>
+        <span
+          className={`text-xs px-2 py-1 rounded-full whitespace-nowrap font-medium ${getPriceCategoryColor(activity.priceCategory)}`}
+        >
           {activity.priceCategory}
         </span>
       </div>
@@ -74,7 +76,12 @@ function ActivityCard({ activity }: { activity: PlanActivity }) {
                   strokeWidth={2}
                   d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                 />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               <span>{activity.logistics.address}</span>
             </p>
@@ -200,4 +207,3 @@ export function GeneratedPlanView({ plan, onSave }: GeneratedPlanViewProps) {
     </div>
   );
 }
-

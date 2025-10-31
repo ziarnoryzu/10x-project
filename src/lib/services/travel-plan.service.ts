@@ -2,11 +2,18 @@
 
 import type { Json } from "../../db/database.types";
 import type { TravelPlanOptions } from "../../types";
+import { OpenRouterService } from "../openrouter.service";
+import { TravelPlanContentSchema } from "../schemas/travel-plan.schema";
 
 /**
- * Service responsible for generating travel plans from notes
+ * Service responsible for generating travel plans from notes using AI
  */
 export class TravelPlanService {
+  private openRouterService: OpenRouterService;
+
+  constructor() {
+    this.openRouterService = new OpenRouterService();
+  }
   /**
    * Validates that the note content meets minimum requirements
    * @param content - The note content to validate
@@ -27,157 +34,94 @@ export class TravelPlanService {
 
   /**
    * Generates a travel plan based on note content and optional personalization options
+   * Uses OpenRouter AI to create a detailed, structured travel itinerary
    * @param noteContent - The content of the travel note
-   * @param options - Optional personalization options
+   * @param options - Optional personalization options (style, transport, budget)
+   * @param userPreferences - Optional user preferences from profile (interests, cuisine, pace, etc.)
    * @returns Generated travel plan as structured JSON
    */
-  async generatePlan(noteContent: string, options?: TravelPlanOptions): Promise<Json> {
-    // TODO: Implement actual AI-based plan generation
-    // For now, return a structured mock response that matches TravelPlanContent type
-
+  async generatePlan(noteContent: string, options?: TravelPlanOptions, userPreferences?: string[]): Promise<Json> {
+    // Extract options with defaults
     const style = options?.style || "leisure";
     const transport = options?.transport || "public";
     const budget = options?.budget || "standard";
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Build system prompt that defines the AI's role and task
+    const systemPrompt = `Jesteś ekspertem w planowaniu podróży i tworzeniu szczegółowych, spersonalizowanych planów wycieczek. 
 
-    const plan = {
-      days: [
-        {
-          day: 1,
-          title: "Dzień 1: Zwiedzanie centrum",
-          activities: {
-            morning: [
-              {
-                name: "Stare Miasto",
-                description: `Spacer po malowniczych uliczkach Starego Miasta. ${style === "adventure" ? "Przygotuj się na intensywne zwiedzanie!" : "W spokojnym tempie poznaj lokalną architekturę."}`,
-                priceCategory: budget === "economy" ? "Bezpłatne" : budget === "standard" ? "5-10 zł" : "15-20 zł (wstęp z przewodnikiem)",
-                logistics: {
-                  address: "Rynek Starego Miasta 1",
-                  mapLink: "https://maps.google.com/?q=Rynek+Starego+Miasta",
-                  estimatedTime: style === "adventure" ? "2-3 godziny" : "1-2 godziny",
-                },
-              },
-            ],
-            afternoon: [
-              {
-                name: "Muzeum Historyczne",
-                description: `Poznaj fascynującą historię miasta przez interaktywne wystawy. ${budget === "luxury" ? "Zwiedzanie z prywatnym przewodnikiem." : "Zwiedzanie we własnym tempie."}`,
-                priceCategory: budget === "economy" ? "10 zł (bilet ulgowy)" : budget === "standard" ? "20 zł" : "50 zł (tour premium)",
-                logistics: {
-                  address: "ul. Muzealna 15",
-                  mapLink: "https://maps.google.com/?q=Muzeum+Historyczne",
-                  estimatedTime: "2-3 godziny",
-                },
-              },
-              {
-                name: "Lunch w lokalnej restauracji",
-                description: `Wypróbuj tradycyjne dania kuchni regionalnej. ${budget === "luxury" ? "Ekskluzywna restauracja z widokiem na miasto." : "Przytulne bistro z domową atmosferą."}`,
-                priceCategory: budget === "economy" ? "20-30 zł" : budget === "standard" ? "40-60 zł" : "100-150 zł",
-                logistics: {
-                  address: "ul. Smaczna 7",
-                  estimatedTime: "1-1.5 godziny",
-                },
-              },
-            ],
-            evening: [
-              {
-                name: "Spacer nad rzeką",
-                description: `${style === "adventure" ? "Energiczny spacer z pięknymi widokami." : "Relaksujący wieczorny spacer o zachodzie słońca."}`,
-                priceCategory: "Bezpłatne",
-                logistics: {
-                  address: "Bulwar Nadrzeczny",
-                  estimatedTime: "1-2 godziny",
-                },
-              },
-            ],
-          },
-        },
-        {
-          day: 2,
-          title: "Dzień 2: Okolice i przyroda",
-          activities: {
-            morning: [
-              {
-                name: `${transport === "car" ? "Wycieczka samochodem" : transport === "public" ? "Przejazd autobusem" : "Wędrówka piesza"} do rezerwatu`,
-                description: `Odkryj piękno lokalnej przyrody. ${style === "adventure" ? "Przygotuj się na trekking i aktywności outdoor!" : "Spokojne obcowanie z naturą."}`,
-                priceCategory: transport === "car" ? "Parking: 10 zł" : transport === "public" ? "Bilet: 5 zł" : "Bezpłatne",
-                logistics: {
-                  address: "Rezerwat Przyrody Leśny",
-                  mapLink: "https://maps.google.com/?q=Rezerwat+Przyrody",
-                  estimatedTime: style === "adventure" ? "4-5 godzin" : "2-3 godziny",
-                },
-              },
-            ],
-            afternoon: [
-              {
-                name: "Piknik w otoczeniu natury",
-                description: `Relaks na świeżym powietrzu. ${budget === "luxury" ? "Catering premium z lokalnymi specjałami." : "Własne przekąski lub lokalne produkty z pobliskiego sklepu."}`,
-                priceCategory: budget === "economy" ? "15-25 zł" : budget === "standard" ? "40-60 zł" : "100-120 zł",
-                logistics: {
-                  estimatedTime: "1-2 godziny",
-                },
-              },
-            ],
-            evening: [
-              {
-                name: "Powrót do miasta",
-                description: `${transport === "car" ? "Wygodny powrót własnym samochodem." : transport === "public" ? "Powrót komunikacją publiczną." : "Spacer powrotny z możliwością zatrzymania się w ciekawych miejscach."}`,
-                priceCategory: transport === "car" ? "Paliwo: ~30 zł" : transport === "public" ? "Bilet: 5 zł" : "Bezpłatne",
-                logistics: {
-                  estimatedTime: transport === "walking" ? "2-3 godziny" : "30-60 minut",
-                },
-              },
-            ],
-          },
-        },
-        {
-          day: 3,
-          title: "Dzień 3: Kultura i rozrywka",
-          activities: {
-            morning: [
-              {
-                name: "Galeria sztuki współczesnej",
-                description: `Zanurz się w świat nowoczesnej sztuki. ${budget === "luxury" ? "Prywatne oprowadzanie przez kuratora." : "Zwiedzanie z audioguidem."}`,
-                priceCategory: budget === "economy" ? "Wstęp wolny w czwartki" : budget === "standard" ? "15 zł" : "40 zł + przewodnik",
-                logistics: {
-                  address: "pl. Artystyczny 3",
-                  mapLink: "https://maps.google.com/?q=Galeria+Sztuki",
-                  estimatedTime: "2-3 godziny",
-                },
-              },
-            ],
-            afternoon: [
-              {
-                name: "Lunch i zakupy pamiątek",
-                description: `Ostatnie chwile na zakupy i delektowanie się lokalną kuchnią. ${budget === "luxury" ? "Ekskluzywne butiki i restauracje fine dining." : "Lokalne rzemiosło i przytulne kawiarnie."}`,
-                priceCategory: budget === "economy" ? "30-50 zł" : budget === "standard" ? "60-100 zł" : "150-250 zł",
-                logistics: {
-                  address: "ul. Handlowa 12",
-                  estimatedTime: "2-3 godziny",
-                },
-              },
-            ],
-            evening: [
-              {
-                name: style === "adventure" ? "Wieczór w klubie tanecznym" : "Spokojny wieczór w klimatycznej kawiarni",
-                description: style === "adventure" ? "Zakończ podróż energicznym wieczorem pełnym tańca i zabawy!" : "Refleksja nad podróżą przy dobrej kawie i deserze.",
-                priceCategory: budget === "economy" ? "20-30 zł" : budget === "standard" ? "40-60 zł" : "80-120 zł",
-                logistics: {
-                  address: style === "adventure" ? "ul. Klubowa 5" : "ul. Kameralna 8",
-                  estimatedTime: "2-4 godziny",
-                },
-              },
-            ],
-          },
-        },
-      ],
-      disclaimer: `Ten plan podróży został wygenerowany automatycznie na podstawie Twojej notatki i wybranych preferencji (styl: ${style}, transport: ${transport}, budżet: ${budget}). Prosimy o weryfikację godzin otwarcia i dostępności poszczególnych miejsc przed wizytą. Ceny są orientacyjne i mogą się różnić. Niektóre atrakcje mogą wymagać wcześniejszej rezerwacji.`,
-    };
+Twoim zadaniem jest przeanalizowanie notatek użytkownika dotyczących podróży i utworzenie kompleksowego planu wycieczki.
 
-    // Convert to Json type via unknown to satisfy TypeScript
-    return plan as unknown as Json;
+Musisz wziąć pod uwagę następujące preferencje użytkownika:
+- Styl: ${style === "adventure" ? "przygodowy (aktywne zwiedzanie, intensywny program)" : "wypoczynkowy (spokojne tempo, relaks)"}
+- Transport: ${transport === "car" ? "samochód" : transport === "public" ? "komunikacja publiczna" : "piesze przemieszczanie się"}
+- Budżet: ${budget === "economy" ? "ekonomiczny (tanie opcje)" : budget === "standard" ? "standardowy (średnie ceny)" : "luksusowy (premium opcje)"}${
+      userPreferences && userPreferences.length > 0
+        ? `
+
+PREFERENCJE UŻYTKOWNIKA Z PROFILU:
+${userPreferences.map((pref) => `• ${pref}`).join("\n")}
+
+Uwzględnij te preferencje przy planowaniu - traktuj je jako ważne wskazówki, ale nie sztywne wymagania.
+Staraj się, aby w całym planie pojawiła się przynajmniej jedna atrakcja lub restauracja dla każdej preferencji.
+
+• Preferencje kulinarne (np. "włoska kuchnia", "japońska kuchnia"):
+  - Zaproponuj kilka restauracji tego typu (niekoniecznie wszystkie posiłki)
+  - W opisach wyraźnie zaznacz typ kuchni (np. "włoska restauracja", "pizzeria")
+  - Połącz z lokalnymi specjałami - dobrze jest mieć mix preferencji użytkownika i lokalnej kuchni
+
+• Zainteresowania tematyczne (np. "geografia", "biologia", "historia", "sztuka"):
+  - Włącz do planu przynajmniej jedną-dwie atrakcje związane z każdym zainteresowaniem
+  - "geografia" → punkty widokowe, wzgórza, terasy widokowe, ciekawe krajobrazy
+  - "biologia" → ogrody botaniczne, akwaria, zoo, rezerwaty przyrody, parki z ciekawą florą
+  - "historia" → muzea historyczne, zabytki, zamki, starówki
+  - "sztuka" → galerie, muzea sztuki, street art, wystawy
+  - W opisach można naturalnie wspomnieć związek z zainteresowaniem
+
+Przykład zbalansowanego planu dla preferencji "włoska kuchnia", "biologia", "geografia":
+- Dzień 1: Lunch w pizzerii (włoska kuchnia), Punkt widokowy (geografia)
+- Dzień 2: Ogród Botaniczny (biologia), Kolacja z lokalnymi specjałami
+- Dzień 3: Muzeum Narodowe, Kolacja w włoskiej restauracji`
+        : ""
+    }
+
+WAŻNE - Wymagania dotyczące struktury danych: 
+- Każda aktywność MUSI mieć wypełnione pole priceCategory używając dokładnie jednej z wartości: "free", "budget", "moderate", "expensive"
+- Każda aktywność MUSI zawierać szczegółowy opis (description)
+- Staraj się uwzględnić realne miejsca i atrakcje z notatek użytkownika
+- Dostosuj aktywności do wybranego stylu, transportu i budżetu
+- Uwzględnij logistykę (adresy, szacowany czas)
+- Stwórz plan na podstawie długości pobytu wskazanej w notatkach (lub domyślnie 3 dni)
+
+WAŻNE - Wymagania dotyczące linków do map (logistics.mapLink):
+- ZAWSZE używaj pełnego formatu Google Maps: https://www.google.com/maps/search/?api=1&query=NAZWA_MIEJSCA+MIASTO
+- NIE używaj skróconych linków (goo.gl)
+- Zamień spacje na + w nazwie miejsca
+- ZAWSZE dodaj nazwę miasta na końcu query
+- Przykład prawidłowy: https://www.google.com/maps/search/?api=1&query=Zamek+Królewski+Warszawa
+- Przykład prawidłowy: https://www.google.com/maps/search/?api=1&query=Łazienki+Królewskie+Warszawa`;
+
+    // Build user prompt with the actual note content
+    const userPrompt = `Na podstawie poniższych notatek podróżnych, stwórz szczegółowy, ustrukturyzowany plan wycieczki:
+
+${noteContent}
+
+Pamiętaj o dostosowaniu planu do preferencji: styl ${style}, transport ${transport}, budżet ${budget}.`;
+
+    // Call OpenRouter API with structured data schema
+    const travelPlanContent = await this.openRouterService.getStructuredData({
+      systemPrompt,
+      userPrompt,
+      schema: TravelPlanContentSchema,
+      schemaName: "create_travel_plan",
+      schemaDescription:
+        "Tworzy ustrukturyzowany plan podróży z notatek użytkownika, uwzględniający preferencje dotyczące stylu, transportu i budżetu.",
+      model: "anthropic/claude-3.5-haiku", // Fast, reliable, excellent function calling, 200K context
+      temperature: 0.7, // Some creativity but still consistent
+      max_tokens: 8000, // Sufficient for long travel plans (5+ days)
+    });
+
+    // Convert to Json type for database storage
+    return travelPlanContent as unknown as Json;
   }
 }
 

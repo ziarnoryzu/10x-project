@@ -25,4 +25,3 @@ export const NotesListSkeleton = memo(function NotesListSkeleton({ count = 5 }: 
     </div>
   );
 });
-
