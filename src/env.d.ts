@@ -8,3 +8,15 @@ declare namespace App {
     supabase: SupabaseClient;
   }
 }
+
+interface ImportMetaEnv {
+  readonly OPENROUTER_API_KEY: string;
+  readonly OPENROUTER_MODEL?: string;
+  readonly SUPABASE_URL: string;
+  readonly SUPABASE_ANON_KEY: string;
+  readonly DEFAULT_USER_ID?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

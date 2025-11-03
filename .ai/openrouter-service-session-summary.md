@@ -187,7 +187,16 @@
 
 **Finalna konfiguracja:**
 ```typescript
-model: "anthropic/claude-3.5-haiku"
+// Default w OpenRouterService:
+private readonly defaultModel = "anthropic/claude-3.5-haiku";
+
+// TravelPlanService przekazuje model z .env (lub undefined):
+this.model = import.meta.env.OPENROUTER_MODEL;
+
+// Wywołanie:
+model: this.model // undefined → użyje defaultModel z OpenRouterService
+
+// Parametry:
 max_tokens: 8000
 temperature: 0.7
 ```
@@ -198,6 +207,16 @@ temperature: 0.7
 - 💰 Ekonomiczny ($0.01/plan)
 - 🎯 Niezawodny (brak błędów walidacji)
 - 📝 200K context window
+
+**Konfiguracja w .env:**
+```env
+OPENROUTER_MODEL=anthropic/claude-3.5-haiku
+```
+
+Lub dla krótszych planów i niższych kosztów:
+```env
+OPENROUTER_MODEL=openai/gpt-4o-mini
+```
 
 ---
 
@@ -255,14 +274,41 @@ WAŻNE - Wymagania dotyczące linków do map:
 `;
 ```
 
-### Poprawka 7: Zmiana modelu
+### Poprawka 7: Konfiguracja modelu
 ```typescript
-// Ewolucja:
-model: "openai/gpt-4o"              // Start - za drogi
-model: "openai/gpt-4o-mini"         // Test 1 - problemy z długimi planami
-model: "google/gemini-flash-1.5"    // Test 2 - nie działa
-model: "anthropic/claude-3.5-haiku" // Finał - doskonały! ✅
+// Finalna architektura (najlepsza):
+
+// OpenRouterService - rozsądny default
+class OpenRouterService {
+  private readonly defaultModel = "anthropic/claude-3.5-haiku";
+  
+  async getStructuredData(params) {
+    const model = params.model || this.defaultModel; // Fallback
+  }
+}
+
+// TravelPlanService - przekazuje konfigurację z .env
+class TravelPlanService {
+  private readonly model?: string;
+  
+  constructor() {
+    this.model = import.meta.env.OPENROUTER_MODEL; // może być undefined
+  }
+  
+  async generatePlan() {
+    await this.openRouterService.getStructuredData({
+      model: this.model, // undefined → użyje claude-3.5-haiku
+    });
+  }
+}
 ```
+
+**Zalety obecnego podejścia:**
+- ✅ Rozsądny default (zawsze działa)
+- ✅ Jawna konfiguracja przez .env
+- ✅ Mniej boilerplate
+- ✅ Elastyczność (można nadpisać)
+- ✅ Przygotowane na przyszłość
 
 ---
 
@@ -316,9 +362,14 @@ model: "anthropic/claude-3.5-haiku" // Finał - doskonały! ✅
 - ✅ Ukrywanie szczegółów technicznych przed użytkownikiem
 
 ### Modele AI 🤖
-- **Aktualny:** Claude 3.5 Haiku (`anthropic/claude-3.5-haiku`)
-- **Alternatywa (krótkie plany):** GPT-4o-mini (`openai/gpt-4o-mini`)
-- **Alternatywa (najwyższa jakość):** GPT-4o (`openai/gpt-4o`)
+- **Rekomendowany:** Claude 3.5 Haiku (`anthropic/claude-3.5-haiku`) - dla planów 5+ dni
+- **Alternatywa (krótkie plany):** GPT-4o-mini (`openai/gpt-4o-mini`) - ekonomiczny
+- **Alternatywa (najwyższa jakość):** GPT-4o (`openai/gpt-4o`) - droższy
+
+**Konfiguracja:** Ustaw w `.env`:
+```env
+OPENROUTER_MODEL=anthropic/claude-3.5-haiku
+```
 
 ---
 
@@ -336,21 +387,33 @@ System jest **w pełni funkcjonalny i przetestowany**. Wszystkie komponenty dzia
 ### Jak używać:
 
 ```typescript
-// W travel-plan.service.ts - już skonfigurowane:
-const travelPlanContent = await this.openRouterService.getStructuredData({
-  systemPrompt,
-  userPrompt,
-  schema: TravelPlanContentSchema,
-  schemaName: "create_travel_plan",
-  schemaDescription: "...",
-  model: "anthropic/claude-3.5-haiku",
-  temperature: 0.7,
-  max_tokens: 8000,
-});
+// W travel-plan.service.ts - obecnie zaimplementowane:
+class TravelPlanService {
+  private readonly model?: string;
+  
+  constructor() {
+    // Pobierz z .env jeśli ustawiono
+    this.model = import.meta.env.OPENROUTER_MODEL;
+  }
+
+  async generatePlan(...) {
+    const travelPlanContent = await this.openRouterService.getStructuredData({
+      systemPrompt,
+      userPrompt,
+      schema: TravelPlanContentSchema,
+      schemaName: "create_travel_plan",
+      schemaDescription: "...",
+      model: this.model, // undefined → użyje claude-3.5-haiku z OpenRouterService
+      temperature: 0.7,
+      max_tokens: 8000,
+    });
+  }
+}
 ```
 
 ### Wymagania:
-- `OPENROUTER_API_KEY` w `.env`
+- `OPENROUTER_API_KEY` w `.env` (wymagane)
+- `OPENROUTER_MODEL` w `.env` (opcjonalne - domyślnie: `anthropic/claude-3.5-haiku`)
 - Wystarczający budżet na OpenRouter (~$0.01/plan)
 
 ---

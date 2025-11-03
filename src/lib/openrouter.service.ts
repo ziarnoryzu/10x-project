@@ -33,20 +33,22 @@ import {
  */
 export class OpenRouterService {
   private readonly apiKey: string;
-  private readonly defaultModel: string;
+  private readonly defaultModel = "anthropic/claude-3.5-haiku";
   private readonly apiUrl = "https://openrouter.ai/api/v1/chat/completions";
 
   /**
    * Constructs a new OpenRouterService instance.
-   * Loads the API key from environment variables and sets up the default model.
+   * Loads the API key from environment variables.
+   *
+   * This service provides a sensible default model (claude-3.5-haiku) as fallback,
+   * but business logic layer (e.g., TravelPlanService) can override it by passing
+   * a model parameter, typically from OPENROUTER_MODEL environment variable.
    *
    * @throws {Error} If the OPENROUTER_API_KEY environment variable is not set.
    */
   constructor() {
     // Load API key from environment variables
     this.apiKey = import.meta.env.OPENROUTER_API_KEY;
-    // Use model from .env, fallback to GPT-4o Mini
-    this.defaultModel = import.meta.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 
     // Fail-fast strategy: throw an error if the API key is missing
     if (!this.apiKey) {

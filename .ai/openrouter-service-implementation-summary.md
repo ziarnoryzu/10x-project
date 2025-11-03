@@ -65,13 +65,15 @@ Data zakończenia: 31 października 2025
 
 **Pola prywatne:**
 - `apiKey: string` - klucz API z zmiennych środowiskowych
-- `defaultModel: string` - domyślny model ("mistralai/mistral-7b-instruct")
+- `defaultModel: string` - domyślny model (`anthropic/claude-3.5-haiku`)
 - `apiUrl: string` - URL API OpenRouter
 
 **Konstruktor:**
 - Ładuje klucz API z `import.meta.env.OPENROUTER_API_KEY`
 - Waliduje obecność klucza (fail-fast strategy)
-- Ustawia domyślny model
+- Ustawia defaultModel jako fallback
+
+**Filozofia:** OpenRouterService ma rozsądny default, ale można go nadpisać przekazując model z zewnątrz.
 
 **Metody publiczne:**
 1. `getChatCompletion(params: ChatCompletionParams): Promise<string>`
@@ -121,25 +123,21 @@ Data zakończenia: 31 października 2025
   - `HEAD /api/notes/{noteId}/travel-plan` - sprawdzanie istnienia planu
 
 #### Aktualizacja `TravelPlanService`:
-- Dodano pole prywatne `openRouterService: OpenRouterService`
-- Dodano konstruktor inicjalizujący instancję OpenRouterService
-- **Zastąpiono mock implementację** prawdziwą integracją z AI w metodzie `generatePlan()`:
-  - Budowanie szczegółowego system promptu z preferencjami użytkownika
-  - Budowanie user promptu z treścią notatki
-  - Wywołanie `openRouterService.getStructuredData()` z schematem `TravelPlanContentSchema`
-  - Użycie modelu `openai/gpt-4o` dla najlepszej jakości
-  - Temperature 0.7 dla balansu między kreatywnością a spójnością
-  - Dostosowanie planu do opcji: style, transport, budget
+- Dodano pole prywatne `model?: string`
+- Dodano inicjalizację modelu w konstruktorze:
+  ```typescript
+  this.model = import.meta.env.OPENROUTER_MODEL; // undefined jeśli nie ustawiono
+  ```
+- **Zmieniono wywołanie** `getStructuredData()` - model jest przekazywany z `.env`:
+  - Dodano parametr: `model: this.model`
+  - Jeśli `undefined` → OpenRouterService użyje `defaultModel` (claude-3.5-haiku)
+  - Jeśli ustawiono w `.env` → użyje tego modelu
+- Zachowano kompatybilność z istniejącym API
 
-#### Szczegóły implementacji promptów:
-- **System Prompt**: definiuje rolę AI jako eksperta w planowaniu podróży
-  - Uwzględnia preferencje stylu (adventure/leisure)
-  - Uwzględnia preferencje transportu (car/public/walking)
-  - Uwzględnia preferencje budżetu (economy/standard/luxury)
-  - Wymaga prawidłowych wartości enum dla priceCategory
-  - Wymaga szczegółowych opisów i logistyki
-
-- **User Prompt**: zawiera treść notatki użytkownika i przypomnienie o preferencjach
+**Konfiguracja modelu:**
+- Default w OpenRouterService: `anthropic/claude-3.5-haiku`
+- Można zmienić przez zmienną środowiskową `OPENROUTER_MODEL` w `.env`
+- W przyszłości: możliwość dynamicznego wyboru modelu lub wyboru przez użytkownika
 
 **Rezultat:**
 - ✅ Pełna integracja z OpenRouterService
@@ -341,7 +339,7 @@ Przetestuj endpoint:
 ```bash
 # Utwórz notatkę przez interfejs lub API
 # Następnie wygeneruj plan:
-curl -X POST http://localhost:4321/api/notes/{noteId}/generate-plan \
+curl -X POST http://localhost:3000/api/notes/{noteId}/generate-plan \
   -H "Content-Type: application/json" \
   -d '{
     "options": {
@@ -404,15 +402,29 @@ Implementacja OpenRouterService została pomyślnie zakończona, przetestowana i
 
 ### Finalna Konfiguracja
 
-**Model AI:** Claude 3.5 Haiku (`anthropic/claude-3.5-haiku`)
-- Koszt: ~$0.01/plan (1 cent za plan)
-- Czas: 15-33s (zależnie od długości)
-- Obsługuje plany 1-7+ dni
-- Niezawodny i szybki
+**Model AI:** Konfigurowany przez `OPENROUTER_MODEL` w `.env`
 
-**Alternatywne modele:**
-- GPT-4o-mini: Tańszy ($0.003), ale problemy z długimi planami (5+ dni)
-- GPT-4o: Najlepsza jakość ($0.04), ale droższy
+**Rekomendowane modele:**
+- Claude 3.5 Haiku (`anthropic/claude-3.5-haiku`):
+  - Koszt: ~$0.01/plan
+  - Czas: 15-33s (zależnie od długości)
+  - Obsługuje plany 1-7+ dni
+  - Niezawodny i szybki
+  
+- GPT-4o-mini (`openai/gpt-4o-mini`):
+  - Koszt: ~$0.003/plan (tańszy)
+  - Dobry dla krótkich planów (1-3 dni)
+  - Może mieć problemy z długimi planami (5+ dni)
+
+- GPT-4o (`openai/gpt-4o`):
+  - Koszt: ~$0.04/plan (droższy)
+  - Najlepsza jakość
+
+**Konfiguracja w .env:**
+```env
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=anthropic/claude-3.5-haiku
+```
 
 ### Testy Produkcyjne
 - ✅ 10+ wygenerowanych planów testowych

@@ -8,10 +8,11 @@
 
 ### Zmienne Środowiskowe
 
-Dodaj następującą zmienną do pliku `.env`:
+Dodaj następujące zmienne do pliku `.env`:
 
 ```env
 OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+OPENROUTER_MODEL=openai/gpt-4o-mini
 ```
 
 **Ważne:** Upewnij się, że plik `.env` jest w `.gitignore` i nigdy nie commituj klucza API do repozytorium!
@@ -23,6 +24,18 @@ Wymagane pakiety (już zainstalowane):
 - `zod-to-json-schema` - konwersja schematów Zod na JSON Schema
 
 ## Architektura
+
+### Separation of Concerns
+
+**OpenRouterService** (Warstwa infrastruktury):
+- Odpowiada za komunikację z OpenRouter API
+- Posiada rozsądny default model (`anthropic/claude-3.5-haiku`)
+- Przyjmuje model jako opcjonalny parametr (fallback do defaultu)
+
+**TravelPlanService** (Warstwa logiki biznesowej):
+- Może przekazać model z `.env` (`OPENROUTER_MODEL`)
+- Jeśli nie przekaże, OpenRouterService użyje defaultu
+- Może w przyszłości wybierać różne modele dla różnych scenariuszy
 
 ### Struktura Plików
 
@@ -72,9 +85,9 @@ const service = new OpenRouterService();
 const response = await service.getChatCompletion({
   systemPrompt: "Jesteś pomocnym asystentem podróży.",
   userPrompt: "Podaj 3 najlepsze atrakcje w Krakowie.",
-  model: "openai/gpt-4o-mini",  // Opcjonalnie
-  temperature: 0.7,               // Opcjonalnie
-  max_tokens: 500                 // Opcjonalnie
+  model: "openai/gpt-4o-mini", // Opcjonalne - bez tego użyje claude-3.5-haiku
+  temperature: 0.7,
+  max_tokens: 500
 });
 
 console.log(response); // String z odpowiedzią
@@ -96,7 +109,7 @@ const travelPlan = await service.getStructuredData({
   schema: TravelPlanContentSchema,
   schemaName: "create_travel_plan",
   schemaDescription: "Tworzy strukturalny plan podróży",
-  model: "openai/gpt-4o",
+  model: "anthropic/claude-3.5-haiku", // Opcjonalne - domyślnie claude-3.5-haiku
   temperature: 0.7
 });
 
@@ -107,7 +120,7 @@ console.log(travelPlan.disclaimer);
 
 ### 3. Integracja w Serwisie Biznesowym
 
-Przykład z `TravelPlanService`:
+Przykład z `TravelPlanService` - **rekomendowane podejście**:
 
 ```typescript
 import { OpenRouterService } from '../openrouter.service';
@@ -115,28 +128,39 @@ import { TravelPlanContentSchema } from '../schemas';
 
 export class TravelPlanService {
   private openRouterService: OpenRouterService;
+  private readonly model?: string;
 
   constructor() {
     this.openRouterService = new OpenRouterService();
+    // Use model from environment variable if provided
+    this.model = import.meta.env.OPENROUTER_MODEL;
   }
 
   async generatePlan(noteContent: string, options?: TravelPlanOptions) {
     const systemPrompt = `Jesteś ekspertem...`;
     const userPrompt = `Stwórz plan na podstawie: ${noteContent}`;
 
+    // Pass model from .env if set, otherwise OpenRouterService uses default
     const plan = await this.openRouterService.getStructuredData({
       systemPrompt,
       userPrompt,
       schema: TravelPlanContentSchema,
       schemaName: "create_travel_plan",
       schemaDescription: "Tworzy plan podróży",
-      model: "openai/gpt-4o"
+      model: this.model // From OPENROUTER_MODEL or undefined (uses claude-3.5-haiku)
     });
 
     return plan;
   }
 }
 ```
+
+**Zalety tego podejścia:**
+- ✅ **Rozsądny default**: Zawsze działa (claude-3.5-haiku)
+- ✅ **Konfigurowalność**: Można zmienić przez `.env`
+- ✅ **Jawność**: Widać że używa `OPENROUTER_MODEL`
+- ✅ **Prostota**: Mniej boilerplate kodu
+- ✅ **Elastyczność**: Możliwość nadpisania dla konkretnych przypadków
 
 ### 4. Obsługa Błędów w API Route
 
@@ -232,8 +256,8 @@ const recommendations = await openRouterService.getStructuredData({
   userPrompt: "Polecić 3 najlepsze restauracje włoskie.",
   schema: z.array(RestaurantRecommendationSchema),
   schemaName: "recommend_restaurants",
-  schemaDescription: "Zwraca listę rekomendowanych restauracji",
-  model: "openai/gpt-4o"
+  schemaDescription: "Zwraca listę rekomendowanych restauracji"
+  // model opcjonalne - użyje claude-3.5-haiku jeśli nie przekażemy
 });
 
 // recommendations jest typowane jako RestaurantRecommendation[]
@@ -250,16 +274,71 @@ Popularne modele dostępne przez OpenRouter:
 
 | Model | Identyfikator | Zalecane Użycie | Cena |
 |-------|---------------|-----------------|------|
-| GPT-4o | `openai/gpt-4o` | Structured data, złożone zadania | Wyższa |
-| GPT-4o Mini | `openai/gpt-4o-mini` | Proste zadania, szybkie odpowiedzi | Niższa |
-| Mistral 7B | `mistralai/mistral-7b-instruct` | Ekonomiczne, proste zadania | Najniższa |
+| GPT-4o | `openai/gpt-4o` | Najwyższa jakość, złożone zadania | Wyższa |
+| GPT-4o Mini | `openai/gpt-4o-mini` | Balans ceny i jakości | Niższa |
+| Claude 3.5 Haiku | `anthropic/claude-3.5-haiku` | Długie plany, niezawodny | Średnia |
 | Claude 3.5 Sonnet | `anthropic/claude-3.5-sonnet` | Wysokiej jakości odpowiedzi | Wyższa |
+| Mistral 7B | `mistralai/mistral-7b-instruct` | Ekonomiczne, proste zadania | Najniższa |
+
+### Konfiguracja Modelu
+
+**Default model w OpenRouterService:**
+```typescript
+private readonly defaultModel = "anthropic/claude-3.5-haiku";
+```
+
+**Nadpisanie przez TravelPlanService:**
+```typescript
+// W TravelPlanService:
+constructor() {
+  this.model = import.meta.env.OPENROUTER_MODEL; // undefined jeśli nie ustawiono
+}
+
+// Przekazanie do OpenRouterService:
+await this.openRouterService.getStructuredData({
+  model: this.model, // undefined → użyje defaultModel (claude-3.5-haiku)
+  // ...
+});
+```
+
+**Plik `.env` (opcjonalny):**
+```env
+OPENROUTER_MODEL=openai/gpt-4o-mini
+```
+
+### Przepływ Decyzji
+
+1. **Jeśli `OPENROUTER_MODEL` w `.env`** → użyje tego modelu
+2. **Jeśli brak w `.env`** → użyje defaultu `anthropic/claude-3.5-haiku`
+3. **Można nadpisać jawnie** → przekazać inny model bezpośrednio
 
 ### Rekomendacje
 
-- **Structured Data (TravelPlanContentSchema)**: Użyj `openai/gpt-4o` lub `anthropic/claude-3.5-sonnet`
-- **Proste Chat Completions**: Użyj `openai/gpt-4o-mini` lub `mistralai/mistral-7b-instruct`
-- **Budżet ograniczony**: Użyj `mistralai/mistral-7b-instruct` (ustawiony jako domyślny)
+- **Structured Data (TravelPlanContentSchema)**: `anthropic/claude-3.5-haiku` lub `openai/gpt-4o-mini`
+- **Proste Chat Completions**: `openai/gpt-4o-mini` lub `mistralai/mistral-7b-instruct`
+- **Długie plany (5+ dni)**: `anthropic/claude-3.5-haiku`
+- **Najwyższa jakość**: `openai/gpt-4o` lub `anthropic/claude-3.5-sonnet`
+
+### Zaawansowane: Dynamiczny Wybór Modelu
+
+W przyszłości możesz rozszerzyć logikę biznesową o inteligentny wybór modelu:
+
+```typescript
+class TravelPlanService {
+  private readonly shortPlanModel = "openai/gpt-4o-mini";
+  private readonly longPlanModel = "anthropic/claude-3.5-haiku";
+
+  async generatePlan(noteContent: string, estimatedDays: number) {
+    // Logika biznesowa decyduje o modelu!
+    const model = estimatedDays > 3 ? this.longPlanModel : this.shortPlanModel;
+    
+    await this.openRouterService.getStructuredData({
+      model, // Różne modele dla różnych scenariuszy
+      // ...
+    });
+  }
+}
+```
 
 ## Parametry Konfiguracyjne
 
@@ -356,7 +435,11 @@ OpenRouter dostarcza nagłówki z informacjami o kosztach:
 
 **Rozwiązanie:**
 1. Sprawdź czy plik `.env` istnieje w głównym katalogu projektu
-2. Upewnij się, że klucz ma prawidłowy format: `OPENROUTER_API_KEY=sk-or-v1-...`
+2. Upewnij się, że klucze mają prawidłowy format:
+   ```env
+   OPENROUTER_API_KEY=sk-or-v1-...
+   OPENROUTER_MODEL=openai/gpt-4o-mini
+   ```
 3. Zrestartuj serwer Astro po dodaniu/modyfikacji `.env`
 
 ### Problem: Rate Limit Error (429)

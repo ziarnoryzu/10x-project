@@ -268,11 +268,14 @@ export interface NavItem {
 /**
  * ChatCompletionParams defines the parameters for a chat completion request.
  * Used by OpenRouterService to generate text responses from LLMs.
+ *
+ * Model is optional - business logic (e.g., TravelPlanService) can provide it
+ * (typically from OPENROUTER_MODEL env var), otherwise defaults to claude-3.5-haiku.
  */
 export interface ChatCompletionParams {
   systemPrompt: string;
   userPrompt: string;
-  model?: string;
+  model?: string; // Optional - falls back to claude-3.5-haiku if not provided
   temperature?: number;
   max_tokens?: number;
 }

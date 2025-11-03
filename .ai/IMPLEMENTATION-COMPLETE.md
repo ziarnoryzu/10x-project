@@ -131,7 +131,7 @@ npm run dev
 Wygeneruj plan podróży przez interfejs użytkownika lub API:
 
 ```bash
-curl -X POST http://localhost:4321/api/notes/{noteId}/generate-plan \
+curl -X POST http://localhost:3000/api/notes/{noteId}/generate-plan \
   -H "Content-Type: application/json" \
   -d '{
     "options": {
@@ -165,13 +165,16 @@ import { TravelPlanContentSchema } from '../lib/schemas';
 
 const service = new OpenRouterService();
 
+// Opcjonalnie: użyj modelu z env lub zostaw undefined (użyje claude-3.5-haiku)
+const model = import.meta.env.OPENROUTER_MODEL;
+
 const plan = await service.getStructuredData({
   systemPrompt: "Jesteś ekspertem w planowaniu podróży.",
   userPrompt: "Stwórz 3-dniowy plan wycieczki do Krakowa.",
   schema: TravelPlanContentSchema,
   schemaName: "create_travel_plan",
   schemaDescription: "Tworzy strukturalny plan podróży",
-  model: "openai/gpt-4o"
+  model: model // undefined → użyje defaultModel (claude-3.5-haiku)
 });
 
 // plan jest w pełni typowany zgodnie ze schematem!
@@ -289,9 +292,13 @@ try {
 
 ## ⚠️ Wymagane Akcje Użytkownika
 
-1. **Dodaj klucz API OpenRouter do `.env`**
-   - Uzyskaj na https://openrouter.ai/
-   - Format: `OPENROUTER_API_KEY=sk-or-v1-...`
+1. **Dodaj konfigurację OpenRouter do `.env`**
+   - Uzyskaj klucz API na https://openrouter.ai/
+   - Format:
+     ```env
+     OPENROUTER_API_KEY=sk-or-v1-...
+     OPENROUTER_MODEL=anthropic/claude-3.5-haiku
+     ```
 
 2. **Zrestartuj serwer Astro**
    - `npm run dev`

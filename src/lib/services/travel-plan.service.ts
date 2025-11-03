@@ -10,9 +10,13 @@ import { TravelPlanContentSchema } from "../schemas/travel-plan.schema";
  */
 export class TravelPlanService {
   private openRouterService: OpenRouterService;
+  private readonly model?: string;
 
   constructor() {
     this.openRouterService = new OpenRouterService();
+    // Use model from environment variable if provided
+    // Otherwise OpenRouterService will use its default (claude-3.5-haiku)
+    this.model = import.meta.env.OPENROUTER_MODEL;
   }
   /**
    * Validates that the note content meets minimum requirements
@@ -108,6 +112,7 @@ ${noteContent}
 Pamiętaj o dostosowaniu planu do preferencji: styl ${style}, transport ${transport}, budżet ${budget}.`;
 
     // Call OpenRouter API with structured data schema
+    // Pass model from env var if set, otherwise OpenRouterService uses default (claude-3.5-haiku)
     const travelPlanContent = await this.openRouterService.getStructuredData({
       systemPrompt,
       userPrompt,
@@ -115,7 +120,7 @@ Pamiętaj o dostosowaniu planu do preferencji: styl ${style}, transport ${transp
       schemaName: "create_travel_plan",
       schemaDescription:
         "Tworzy ustrukturyzowany plan podróży z notatek użytkownika, uwzględniający preferencje dotyczące stylu, transportu i budżetu.",
-      model: "anthropic/claude-3.5-haiku", // Fast, reliable, excellent function calling, 200K context
+      model: this.model, // From OPENROUTER_MODEL env var, or undefined (uses default)
       temperature: 0.7, // Some creativity but still consistent
       max_tokens: 8000, // Sufficient for long travel plans (5+ days)
     });
