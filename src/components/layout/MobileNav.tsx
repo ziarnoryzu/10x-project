@@ -2,23 +2,19 @@ import { useState } from "react";
 import type { NavComponentProps, NavItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { NavLink } from "./NavLink";
 import { useLockBodyScroll } from "@/components/hooks/use-lock-body-scroll";
 
 const navItems: NavItem[] = [
   { href: "/app/notes", label: "Notatki" },
-  { href: "/app/profile", label: "Profil" },
+  { href: "/profile", label: "Profil" },
 ];
 
 export function MobileNav({ activePath }: NavComponentProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   useLockBodyScroll(isOpen);
-
-  const handleLogout = () => {
-    // Mock logout - przekierowanie na stronę logowania
-    window.location.href = "/login";
-  };
 
   return (
     <div className="md:hidden">
@@ -67,9 +63,7 @@ export function MobileNav({ activePath }: NavComponentProps) {
           </nav>
 
           <div className="absolute bottom-8 left-6 right-6">
-            <Button onClick={handleLogout} variant="outline" className="w-full">
-              Wyloguj
-            </Button>
+            <LogoutButton variant="outline" className="w-full" />
           </div>
         </SheetContent>
       </Sheet>

@@ -31,6 +31,10 @@ export default defineConfig({
         access: "public",
       }),
       // Server-side only variables
+      SUPABASE_SERVICE_ROLE_KEY: envField.string({
+        context: "server",
+        access: "secret",
+      }),
       OPENROUTER_API_KEY: envField.string({
         context: "server",
         access: "secret",

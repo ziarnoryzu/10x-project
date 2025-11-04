@@ -4,13 +4,19 @@ import { Toaster } from "@/components/ui/sonner";
 
 interface Props {
   title?: string;
+  showNav?: boolean;
 }
 
-const { title = "10x Astro Starter" } = Astro.props;
+const { title = "VibeTravels", showNav = false } = Astro.props;
+
+// TODO: Check authentication status when middleware is ready
+// const session = Astro.locals.session;
+// const isAuthenticated = !!session;
+const isAuthenticated = false; // Mock for now
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="pl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -19,6 +25,50 @@ const { title = "10x Astro Starter" } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
+    {
+      showNav && (
+        <header class="border-b">
+          <div class="container mx-auto flex h-16 items-center justify-between px-4">
+            <a href="/" class="text-xl font-bold text-primary">
+              VibeTravels
+            </a>
+            <nav aria-label="Główna nawigacja">
+              {isAuthenticated ? (
+                <div class="flex items-center gap-4">
+                  <a
+                    href="/app"
+                    class="text-sm font-medium text-foreground hover:text-primary"
+                  >
+                    Moje podróże
+                  </a>
+                  <a
+                    href="/profile"
+                    class="text-sm font-medium text-foreground hover:text-primary"
+                  >
+                    Profil
+                  </a>
+                </div>
+              ) : (
+                <div class="flex items-center gap-4">
+                  <a
+                    href="/login"
+                    class="text-sm font-medium text-foreground hover:text-primary"
+                  >
+                    Zaloguj się
+                  </a>
+                  <a
+                    href="/register"
+                    class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
+                  >
+                    Zarejestruj się
+                  </a>
+                </div>
+              )}
+            </nav>
+          </div>
+        </header>
+      )
+    }
     <slot />
     <Toaster client:load />
   </body>

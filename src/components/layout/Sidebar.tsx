@@ -1,18 +1,13 @@
 import type { NavComponentProps, NavItem } from "@/types";
-import { Button } from "@/components/ui/button";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { NavLink } from "./NavLink";
 
 const navItems: NavItem[] = [
   { href: "/app/notes", label: "Notatki" },
-  { href: "/app/profile", label: "Profil" },
+  { href: "/profile", label: "Profil" },
 ];
 
 export function Sidebar({ activePath }: NavComponentProps) {
-  const handleLogout = () => {
-    // Mock logout - przekierowanie na stronę logowania
-    window.location.href = "/login";
-  };
-
   return (
     <aside className="hidden h-screen border-r bg-background md:block">
       <div className="flex h-full flex-col">
@@ -34,9 +29,7 @@ export function Sidebar({ activePath }: NavComponentProps) {
         </nav>
 
         <div className="border-t p-4">
-          <Button onClick={handleLogout} variant="outline" className="w-full">
-            Wyloguj
-          </Button>
+          <LogoutButton variant="outline" className="w-full" />
         </div>
       </div>
     </aside>

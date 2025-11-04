@@ -1,0 +1,125 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import { ProfileForm } from "../components/profile/ProfileForm";
+import { ChangePasswordForm } from "../components/profile/ChangePasswordForm";
+import { DeleteAccountButton } from "../components/profile/DeleteAccountButton";
+
+export const prerender = false;
+
+// TODO: Implement requireAuth helper when auth middleware is ready
+// const user = await requireAuth(Astro);
+// if (!user) {
+//   return Astro.redirect("/login?redirect=/profile");
+// }
+
+// TODO: Fetch user profile data when backend is ready
+// const supabase = Astro.locals.supabase;
+// const { data: profile, error } = await supabase
+//   .from("profiles")
+//   .select("*")
+//   .eq("id", user.id)
+//   .single();
+//
+// if (error || !profile) {
+//   console.error("Error fetching profile:", error);
+//   return Astro.redirect("/app");
+// }
+
+// Temporary mock data for UI development
+const mockProfile = {
+  name: "Jan Kowalski",
+  email: "jan@example.com",
+};
+
+const title = "Profil - VibeTravels";
+---
+
+<MainLayout title={title}>
+  <div class="container mx-auto max-w-4xl px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold">Ustawienia profilu</h1>
+      <p class="mt-2 text-muted-foreground">Zarządzaj swoim kontem i preferencjami</p>
+    </div>
+
+    <div class="space-y-8">
+      <!-- Profile Information -->
+      <section class="rounded-lg border bg-card p-6 shadow-sm">
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold">Informacje osobiste</h2>
+          <p class="mt-1 text-sm text-muted-foreground">Zaktualizuj swoje dane osobowe</p>
+        </div>
+
+        <ProfileForm
+          client:load
+          initialName={mockProfile.name}
+          onUpdate={async (name: string) => {
+            const response = await fetch("/api/profile", {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name }),
+            });
+
+            if (!response.ok) {
+              const data = await response.json();
+              throw new Error(data.message || "Nie udało się zapisać zmian");
+            }
+          }}
+        />
+
+        <div class="mt-6 rounded-md bg-muted p-4">
+          <div class="flex items-start gap-3">
+            <div class="text-muted-foreground">
+              <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                ></path>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium">Email</p>
+              <p class="text-sm text-muted-foreground">{mockProfile.email}</p>
+              <p class="mt-1 text-xs text-muted-foreground">
+                Adres email nie może być zmieniony. Skontaktuj się z pomocą techniczną, jeśli potrzebujesz pomocy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Change Password -->
+      <section class="rounded-lg border bg-card p-6 shadow-sm">
+        <ChangePasswordForm client:load />
+      </section>
+
+      <!-- Danger Zone -->
+      <section class="rounded-lg border border-destructive/50 bg-card p-6 shadow-sm">
+        <div class="mb-6">
+          <h3 class="text-xl font-semibold text-destructive">Strefa niebezpieczna</h3>
+          <p class="mt-1 text-sm text-muted-foreground">Nieodwracalne operacje związane z Twoim kontem</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <h4 class="font-medium">Usuń konto</h4>
+            <p class="mt-1 text-sm text-muted-foreground">
+              Trwale usuń swoje konto i wszystkie powiązane dane. Ta akcja nie może być cofnięta.
+            </p>
+          </div>
+
+          <DeleteAccountButton client:load />
+        </div>
+      </section>
+    </div>
+  </div>
+</MainLayout>
