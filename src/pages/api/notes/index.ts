@@ -4,7 +4,6 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { NoteDTO, NoteListItemDTO } from "../../../types";
 import type { SupabaseClient } from "../../../db/supabase.client";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 export const prerender = false;
 
@@ -29,6 +28,20 @@ const QueryParamsSchema = z.object({
  * Supports pagination, sorting, and filtering.
  */
 export const GET: APIRoute = async ({ url, locals }) => {
+  // Check authentication
+  if (!locals.user) {
+    return new Response(
+      JSON.stringify({
+        error: "Unauthorized",
+        message: "Authentication required",
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -63,7 +76,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
     const { count, error: countError } = await supabase
       .from("notes")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", DEFAULT_USER_ID);
+      .eq("user_id", locals.user.id);
 
     if (countError) {
       // eslint-disable-next-line no-console
@@ -95,7 +108,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
     const { data: notes, error: notesError } = await supabase
       .from("notes")
       .select("id, title, updated_at")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", locals.user.id)
       .order(sort, { ascending: order === "asc" })
       .range(from, to);
 
@@ -166,6 +179,20 @@ export const GET: APIRoute = async ({ url, locals }) => {
  * Validates title (required) and content (optional).
  */
 export const POST: APIRoute = async ({ request, locals }) => {
+  // Check authentication
+  if (!locals.user) {
+    return new Response(
+      JSON.stringify({
+        error: "Unauthorized",
+        message: "Authentication required",
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -209,7 +236,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { data: note, error: noteError } = await supabase
       .from("notes")
       .insert({
-        user_id: DEFAULT_USER_ID,
+        user_id: locals.user.id,
         title,
         content: content ?? null,
       })

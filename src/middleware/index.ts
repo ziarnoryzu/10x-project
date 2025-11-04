@@ -1,32 +1,54 @@
 // src/middleware/index.ts
 
 import { defineMiddleware } from "astro:middleware";
-import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "astro:env/server";
-import type { Database } from "../db/database.types";
+import { createSupabaseServerInstance } from "../db/supabase.client";
+
+// Public paths - Auth API endpoints & Server-Rendered Astro Pages
+const PUBLIC_PATHS = [
+  // Server-Rendered Astro Pages
+  "/auth/login",
+  "/auth/register",
+  "/auth/reset-password",
+  "/auth/forgot-password",
+  // Auth API endpoints
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/logout",
+  "/api/auth/reset-password",
+  "/api/auth/forgot-password",
+  // Public pages
+  "/",
+];
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  // Create Supabase client for this request
-  const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      persistSession: false,
-    },
+  const { locals, cookies, url, request, redirect } = context;
+
+  // Create Supabase client for all requests
+  const supabase = createSupabaseServerInstance({
+    cookies,
+    headers: request.headers,
   });
 
-  // Get session from cookies
-  const accessToken = context.cookies.get("sb-access-token")?.value;
-  const refreshToken = context.cookies.get("sb-refresh-token")?.value;
+  // Always set supabase client in locals (TypeScript workaround)
+  (locals as { supabase: typeof supabase }).supabase = supabase;
 
-  if (accessToken && refreshToken) {
-    await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
+  // Get user session
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Set user in locals if authenticated
+  if (user) {
+    (locals as { user?: { id: string; email: string } }).user = {
+      email: user.email || "",
+      id: user.id,
+    };
   }
 
-  // Attach supabase client to context
-  // @ts-expect-error - Astro types may not be fully loaded yet
-  context.locals.supabase = supabase;
+  // Redirect to login for protected routes if not authenticated
+  if (!user && !PUBLIC_PATHS.includes(url.pathname)) {
+    return redirect(`/auth/login?redirect=${encodeURIComponent(url.pathname)}`);
+  }
 
   return next();
 });

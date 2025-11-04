@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/ui/form-error";
 import { PasswordStrength, validatePassword } from "@/components/ui/password-strength";
+import { OnboardingModal } from "./OnboardingModal";
 
 interface RegisterFormProps {
   initialError?: string | null;
@@ -16,6 +17,7 @@ export function RegisterForm({ initialError = null }: RegisterFormProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const nameId = useId();
   const emailId = useId();
@@ -61,8 +63,9 @@ export function RegisterForm({ initialError = null }: RegisterFormProps) {
           return;
         }
 
-        // Redirect to home or show onboarding modal
-        window.location.href = "/app";
+        // After successful registration, show onboarding modal
+        // New users always need onboarding
+        setShowOnboarding(true);
       } catch {
         setError("Wystąpił błąd połączenia. Spróbuj ponownie.");
         setIsSubmitting(false);
@@ -91,105 +94,114 @@ export function RegisterForm({ initialError = null }: RegisterFormProps) {
     setError(null);
   }, []);
 
+  const handleOnboardingComplete = useCallback(() => {
+    setShowOnboarding(false);
+    window.location.href = "/app/notes";
+  }, []);
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Utwórz konto</h2>
-        <p className="text-sm text-muted-foreground">Dołącz do VibeTravels i zacznij planować swoje podróże</p>
-      </div>
+    <>
+      <OnboardingModal isOpen={showOnboarding} onComplete={handleOnboardingComplete} />
 
-      {error && <FormError message={error} id={errorId} />}
-
-      <div className="space-y-4">
-        {/* Name */}
-        <div className="space-y-2">
-          <Label htmlFor={nameId}>Imię</Label>
-          <Input
-            id={nameId}
-            type="text"
-            value={name}
-            onChange={handleNameChange}
-            placeholder="Jan Kowalski"
-            aria-invalid={!isNameValid && name.length > 0}
-            aria-describedby={!isNameValid && name.length > 0 ? `${nameId}-error` : undefined}
-            disabled={isSubmitting}
-            autoComplete="name"
-            required
-          />
-          {!isNameValid && name.length > 0 && (
-            <p id={`${nameId}-error`} className="text-sm text-muted-foreground">
-              Imię musi mieć co najmniej 2 znaki
-            </p>
-          )}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Utwórz konto</h2>
+          <p className="text-sm text-muted-foreground">Dołącz do VibeTravels i zacznij planować swoje podróże</p>
         </div>
 
-        {/* Email */}
-        <div className="space-y-2">
-          <Label htmlFor={emailId}>Email</Label>
-          <Input
-            id={emailId}
-            type="email"
-            value={email}
-            onChange={handleEmailChange}
-            placeholder="jan@example.com"
-            aria-invalid={!isEmailValid && email.length > 0}
-            aria-describedby={!isEmailValid && email.length > 0 ? `${emailId}-error` : undefined}
-            disabled={isSubmitting}
-            autoComplete="email"
-            required
-          />
-          {!isEmailValid && email.length > 0 && (
-            <p id={`${emailId}-error`} className="text-sm text-muted-foreground">
-              Wprowadź poprawny adres email
-            </p>
-          )}
+        {error && <FormError message={error} id={errorId} />}
+
+        <div className="space-y-4">
+          {/* Name */}
+          <div className="space-y-2">
+            <Label htmlFor={nameId}>Imię</Label>
+            <Input
+              id={nameId}
+              type="text"
+              value={name}
+              onChange={handleNameChange}
+              placeholder="Jan Kowalski"
+              aria-invalid={!isNameValid && name.length > 0}
+              aria-describedby={!isNameValid && name.length > 0 ? `${nameId}-error` : undefined}
+              disabled={isSubmitting}
+              autoComplete="name"
+              required
+            />
+            {!isNameValid && name.length > 0 && (
+              <p id={`${nameId}-error`} className="text-sm text-muted-foreground">
+                Imię musi mieć co najmniej 2 znaki
+              </p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div className="space-y-2">
+            <Label htmlFor={emailId}>Email</Label>
+            <Input
+              id={emailId}
+              type="email"
+              value={email}
+              onChange={handleEmailChange}
+              placeholder="jan@example.com"
+              aria-invalid={!isEmailValid && email.length > 0}
+              aria-describedby={!isEmailValid && email.length > 0 ? `${emailId}-error` : undefined}
+              disabled={isSubmitting}
+              autoComplete="email"
+              required
+            />
+            {!isEmailValid && email.length > 0 && (
+              <p id={`${emailId}-error`} className="text-sm text-muted-foreground">
+                Wprowadź poprawny adres email
+              </p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <Label htmlFor={passwordId}>Hasło</Label>
+            <Input
+              id={passwordId}
+              type="password"
+              value={password}
+              onChange={handlePasswordChange}
+              placeholder="••••••••"
+              aria-invalid={!isPasswordValid && password.length > 0}
+              disabled={isSubmitting}
+              autoComplete="new-password"
+              required
+            />
+            <PasswordStrength password={password} />
+          </div>
+
+          {/* Confirm Password */}
+          <div className="space-y-2">
+            <Label htmlFor={confirmPasswordId}>Potwierdź hasło</Label>
+            <Input
+              id={confirmPasswordId}
+              type="password"
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+              placeholder="••••••••"
+              aria-invalid={!doPasswordsMatch && confirmPassword.length > 0}
+              aria-describedby={
+                !doPasswordsMatch && confirmPassword.length > 0 ? `${confirmPasswordId}-error` : undefined
+              }
+              disabled={isSubmitting}
+              autoComplete="new-password"
+              required
+            />
+            {!doPasswordsMatch && confirmPassword.length > 0 && (
+              <p id={`${confirmPasswordId}-error`} className="text-sm text-destructive">
+                Hasła nie są identyczne
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Password */}
-        <div className="space-y-2">
-          <Label htmlFor={passwordId}>Hasło</Label>
-          <Input
-            id={passwordId}
-            type="password"
-            value={password}
-            onChange={handlePasswordChange}
-            placeholder="••••••••"
-            aria-invalid={!isPasswordValid && password.length > 0}
-            disabled={isSubmitting}
-            autoComplete="new-password"
-            required
-          />
-          <PasswordStrength password={password} />
-        </div>
-
-        {/* Confirm Password */}
-        <div className="space-y-2">
-          <Label htmlFor={confirmPasswordId}>Potwierdź hasło</Label>
-          <Input
-            id={confirmPasswordId}
-            type="password"
-            value={confirmPassword}
-            onChange={handleConfirmPasswordChange}
-            placeholder="••••••••"
-            aria-invalid={!doPasswordsMatch && confirmPassword.length > 0}
-            aria-describedby={
-              !doPasswordsMatch && confirmPassword.length > 0 ? `${confirmPasswordId}-error` : undefined
-            }
-            disabled={isSubmitting}
-            autoComplete="new-password"
-            required
-          />
-          {!doPasswordsMatch && confirmPassword.length > 0 && (
-            <p id={`${confirmPasswordId}-error`} className="text-sm text-destructive">
-              Hasła nie są identyczne
-            </p>
-          )}
-        </div>
-      </div>
-
-      <Button type="submit" disabled={!canSubmit} className="w-full">
-        {isSubmitting ? "Tworzenie konta..." : "Zarejestruj się"}
-      </Button>
-    </form>
+        <Button type="submit" disabled={!canSubmit} className="w-full">
+          {isSubmitting ? "Tworzenie konta..." : "Zarejestruj się"}
+        </Button>
+      </form>
+    </>
   );
 }

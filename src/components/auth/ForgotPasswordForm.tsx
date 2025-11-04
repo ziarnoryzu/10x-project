@@ -85,7 +85,7 @@ export function ForgotPasswordForm({ sentConfirmation = false }: ForgotPasswordF
         </div>
 
         <Button asChild variant="outline" className="w-full">
-          <a href="/login">Powrót do logowania</a>
+          <a href="/auth/login">Powrót do logowania</a>
         </Button>
       </div>
     );

@@ -1,6 +1,12 @@
 ---
 import MainLayout from "@/layouts/MainLayout.astro";
 import NoteDetailView from "@/components/views/NoteDetailView";
+import { requireAuth } from "@/lib/utils/auth-guard";
+
+export const prerender = false;
+
+// Require authentication
+requireAuth(Astro);
 
 // Get the noteId from URL params
 const { noteId } = Astro.params;
@@ -9,8 +15,6 @@ const { noteId } = Astro.params;
 if (!noteId) {
   return Astro.redirect("/app/notes");
 }
-
-export const prerender = false;
 ---
 
 <MainLayout title="Szczegóły notatki">

@@ -4,7 +4,6 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { UserProfileDTO } from "../../../types";
 import type { SupabaseClient } from "../../../db/supabase.client";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 import type { Json } from "../../../db/database.types";
 
 export const prerender = false;
@@ -34,7 +33,7 @@ export const GET: APIRoute = async ({ locals }) => {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", DEFAULT_USER_ID)
+      .eq("id", locals.user!.id)
       .single();
 
     // Step 2: Handle not found case
@@ -64,10 +63,9 @@ export const GET: APIRoute = async ({ locals }) => {
     }
 
     // Step 4: Prepare response
-    // TODO: Replace mock email with real email from Supabase Auth when authentication is implemented
     const response: UserProfileDTO = {
       id: profile.id,
-      email: "user@example.com", // Mock email for now
+      email: locals.user!.email || "",
       name: profile.name,
       preferences,
       created_at: profile.created_at,
@@ -153,7 +151,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
     const { data: updatedProfile, error: updateError } = await supabase
       .from("profiles")
       .update(updateData)
-      .eq("id", DEFAULT_USER_ID)
+      .eq("id", locals.user!.id)
       .select()
       .single();
 
@@ -203,10 +201,9 @@ export const PUT: APIRoute = async ({ request, locals }) => {
     }
 
     // Step 6: Prepare response
-    // TODO: Replace mock email with real email from Supabase Auth when authentication is implemented
     const response: UserProfileDTO = {
       id: updatedProfile.id,
-      email: "user@example.com", // Mock email for now
+      email: locals.user!.email || "",
       name: updatedProfile.name,
       preferences: updatedPreferences,
       created_at: updatedProfile.created_at,
@@ -253,7 +250,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     const { data: userNotes, error: notesListError } = await supabase
       .from("notes")
       .select("id")
-      .eq("user_id", DEFAULT_USER_ID);
+      .eq("user_id", locals.user!.id);
 
     if (notesListError) {
       // eslint-disable-next-line no-console
@@ -274,7 +271,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     }
 
     // Step 2: Delete all user's notes
-    const { error: notesDeleteError } = await supabase.from("notes").delete().eq("user_id", DEFAULT_USER_ID);
+    const { error: notesDeleteError } = await supabase.from("notes").delete().eq("user_id", locals.user!.id);
 
     if (notesDeleteError) {
       // eslint-disable-next-line no-console
@@ -292,7 +289,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     }
 
     // Step 3: Delete user's profile
-    const { error: profileDeleteError } = await supabase.from("profiles").delete().eq("id", DEFAULT_USER_ID);
+    const { error: profileDeleteError } = await supabase.from("profiles").delete().eq("id", locals.user!.id);
 
     if (profileDeleteError) {
       // eslint-disable-next-line no-console
@@ -311,7 +308,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
 
     // Step 4: Delete user from Supabase Auth (optional - requires admin privileges)
     // TODO: Implement when proper authentication is set up
-    // const { error: authDeleteError } = await supabase.auth.admin.deleteUser(DEFAULT_USER_ID);
+    // const { error: authDeleteError } = await supabase.auth.admin.deleteUser(locals.user!.id);
     // if (authDeleteError) {
     //   console.error("Error deleting auth user:", authDeleteError);
     // }

@@ -5,7 +5,6 @@ import { z } from "zod";
 import type { GenerateTravelPlanCommand, TravelPlanDTO } from "../../../../types";
 import { travelPlanService } from "../../../../lib/services/travel-plan.service";
 import type { SupabaseClient } from "../../../../db/supabase.client";
-import { DEFAULT_USER_ID } from "../../../../db/supabase.client";
 import {
   OpenRouterError,
   AuthenticationError,
@@ -94,7 +93,7 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
       .from("notes")
       .select("*")
       .eq("id", noteId)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", locals.user!.id)
       .single();
 
     if (noteError || !note) {
@@ -128,7 +127,7 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     const { data: userProfile } = await supabase
       .from("profiles")
       .select("preferences")
-      .eq("id", DEFAULT_USER_ID)
+      .eq("id", locals.user!.id)
       .single();
 
     // Parse preferences from Json to string[]

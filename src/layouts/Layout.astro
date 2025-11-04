@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { Toaster } from "@/components/ui/sonner";
+import { getLocals } from "@/lib/utils/locals";
 
 interface Props {
   title?: string;
@@ -9,10 +10,9 @@ interface Props {
 
 const { title = "VibeTravels", showNav = false } = Astro.props;
 
-// TODO: Check authentication status when middleware is ready
-// const session = Astro.locals.session;
-// const isAuthenticated = !!session;
-const isAuthenticated = false; // Mock for now
+// Check authentication status from middleware
+const { user } = getLocals(Astro);
+const isAuthenticated = !!user;
 ---
 
 <!doctype html>
@@ -35,29 +35,20 @@ const isAuthenticated = false; // Mock for now
             <nav aria-label="Główna nawigacja">
               {isAuthenticated ? (
                 <div class="flex items-center gap-4">
-                  <a
-                    href="/app"
-                    class="text-sm font-medium text-foreground hover:text-primary"
-                  >
+                  <a href="/app/notes" class="text-sm font-medium text-foreground hover:text-primary">
                     Moje podróże
                   </a>
-                  <a
-                    href="/profile"
-                    class="text-sm font-medium text-foreground hover:text-primary"
-                  >
+                  <a href="/profile" class="text-sm font-medium text-foreground hover:text-primary">
                     Profil
                   </a>
                 </div>
               ) : (
                 <div class="flex items-center gap-4">
-                  <a
-                    href="/login"
-                    class="text-sm font-medium text-foreground hover:text-primary"
-                  >
+                  <a href="/auth/login" class="text-sm font-medium text-foreground hover:text-primary">
                     Zaloguj się
                   </a>
                   <a
-                    href="/register"
+                    href="/auth/register"
                     class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
                   >
                     Zarejestruj się

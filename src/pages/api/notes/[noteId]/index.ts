@@ -4,7 +4,6 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { NoteDTO } from "../../../../types";
 import type { SupabaseClient } from "../../../../db/supabase.client";
-import { DEFAULT_USER_ID } from "../../../../db/supabase.client";
 
 export const prerender = false;
 
@@ -55,7 +54,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
       .from("notes")
       .select("*")
       .eq("id", noteId)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", locals.user!.id)
       .single();
 
     // Step 3: Handle not found case
@@ -170,7 +169,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       .from("notes")
       .select("id")
       .eq("id", noteId)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", locals.user!.id)
       .single();
 
     if (!existingNote) {
@@ -272,7 +271,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       .from("notes")
       .select("id")
       .eq("id", noteId)
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", locals.user!.id)
       .single();
 
     if (!existingNote) {

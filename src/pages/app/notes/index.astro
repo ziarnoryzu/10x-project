@@ -1,6 +1,12 @@
 ---
 import MainLayout from "../../../layouts/MainLayout.astro";
 import { NotesListView } from "../../../components/views/NotesListView";
+import { requireAuth } from "../../../lib/utils/auth-guard";
+
+export const prerender = false;
+
+// Require authentication
+requireAuth(Astro);
 ---
 
 <MainLayout title="Moje notatki">

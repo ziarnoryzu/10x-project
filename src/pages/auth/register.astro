@@ -1,15 +1,12 @@
 ---
-import AuthLayout from "../layouts/AuthLayout.astro";
-import { RegisterForm } from "../components/auth/RegisterForm";
+import AuthLayout from "../../layouts/AuthLayout.astro";
+import { RegisterForm } from "../../components/auth/RegisterForm";
+import { requireNoAuth } from "../../lib/utils/auth-guard";
 
 export const prerender = false;
 
 // Check if user is already logged in
-// TODO: Implement requireNoAuth helper when auth middleware is ready
-// const session = Astro.locals.session;
-// if (session) {
-//   return Astro.redirect("/app");
-// }
+requireNoAuth(Astro);
 
 // Get error message from URL params
 const errorParam = Astro.url.searchParams.get("error");
@@ -27,6 +24,7 @@ const title = "Rejestracja - VibeTravels";
 
   <div slot="footer">
     Masz już konto?
-    <a href="/login" class="font-medium text-primary hover:underline">Zaloguj się</a>
+    <a href="/auth/login" class="font-medium text-primary hover:underline">Zaloguj się</a>
   </div>
 </AuthLayout>
+

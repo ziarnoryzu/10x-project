@@ -30,7 +30,7 @@ export function LogoutButton({
       });
 
       if (response.ok) {
-        window.location.href = "/login";
+        window.location.href = "/auth/login";
       } else {
         setIsLoggingOut(false);
       }

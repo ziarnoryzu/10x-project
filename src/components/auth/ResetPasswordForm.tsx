@@ -54,7 +54,7 @@ export function ResetPasswordForm({ code }: ResetPasswordFormProps) {
         }
 
         // Redirect to login with success message
-        window.location.href = "/login?success=password-reset";
+        window.location.href = "/auth/login?success=password-reset";
       } catch {
         setError("Wystąpił błąd połączenia. Spróbuj ponownie.");
         setIsSubmitting(false);

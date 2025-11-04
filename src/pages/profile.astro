@@ -3,32 +3,42 @@ import MainLayout from "../layouts/MainLayout.astro";
 import { ProfileForm } from "../components/profile/ProfileForm";
 import { ChangePasswordForm } from "../components/profile/ChangePasswordForm";
 import { DeleteAccountButton } from "../components/profile/DeleteAccountButton";
+import { TravelPreferencesForm } from "../components/profile/TravelPreferencesForm";
+import { requireAuth } from "../lib/utils/auth-guard";
+import { getLocals } from "../lib/utils/locals";
 
 export const prerender = false;
 
-// TODO: Implement requireAuth helper when auth middleware is ready
-// const user = await requireAuth(Astro);
-// if (!user) {
-//   return Astro.redirect("/login?redirect=/profile");
-// }
+// Require authentication
+const user = requireAuth(Astro);
+if (!user) {
+  return;
+}
 
-// TODO: Fetch user profile data when backend is ready
-// const supabase = Astro.locals.supabase;
-// const { data: profile, error } = await supabase
-//   .from("profiles")
-//   .select("*")
-//   .eq("id", user.id)
-//   .single();
-//
-// if (error || !profile) {
-//   console.error("Error fetching profile:", error);
-//   return Astro.redirect("/app");
-// }
+const { supabase } = getLocals(Astro);
 
-// Temporary mock data for UI development
-const mockProfile = {
-  name: "Jan Kowalski",
-  email: "jan@example.com",
+const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+
+if (error || !profile) {
+  return Astro.redirect("/app/notes");
+}
+
+// Parse preferences from JSONB to string[]
+let preferences: string[] = [];
+if (profile.preferences && typeof profile.preferences === "object" && !Array.isArray(profile.preferences)) {
+  // If preferences is an object (Record<string, string[]>), flatten all values
+  preferences = Object.values(profile.preferences as Record<string, unknown>)
+    .flat()
+    .filter((item: unknown): item is string => typeof item === "string");
+} else if (Array.isArray(profile.preferences)) {
+  // If preferences is already an array, use it directly
+  preferences = profile.preferences.filter((item: unknown): item is string => typeof item === "string");
+}
+
+const profileData = {
+  name: profile.name || "Użytkownik",
+  email: user.email || "",
+  preferences,
 };
 
 const title = "Profil - VibeTravels";
@@ -51,13 +61,14 @@ const title = "Profil - VibeTravels";
 
         <ProfileForm
           client:load
-          initialName={mockProfile.name}
+          initialName={profileData.name}
           onUpdate={async (name: string) => {
-            const response = await fetch("/api/profile", {
+            const response = await fetch("/api/profiles/me", {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json",
               },
+              credentials: "include",
               body: JSON.stringify({ name }),
             });
 
@@ -88,13 +99,25 @@ const title = "Profil - VibeTravels";
             </div>
             <div>
               <p class="text-sm font-medium">Email</p>
-              <p class="text-sm text-muted-foreground">{mockProfile.email}</p>
+              <p class="text-sm text-muted-foreground">{profileData.email}</p>
               <p class="mt-1 text-xs text-muted-foreground">
                 Adres email nie może być zmieniony. Skontaktuj się z pomocą techniczną, jeśli potrzebujesz pomocy.
               </p>
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- Travel Preferences -->
+      <section class="rounded-lg border bg-card p-6 shadow-sm">
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold">Preferencje turystyczne</h2>
+          <p class="mt-1 text-sm text-muted-foreground">
+            Wybierz swoje preferencje, aby AI generowało plany podróży lepiej dopasowane do Twoich potrzeb
+          </p>
+        </div>
+
+        <TravelPreferencesForm client:load initialPreferences={profileData.preferences} />
       </section>
 
       <!-- Change Password -->

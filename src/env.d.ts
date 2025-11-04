@@ -6,6 +6,10 @@ import type { SupabaseClient } from "./db/supabase.client";
 declare namespace App {
   interface Locals {
     supabase: SupabaseClient;
+    user?: {
+      id: string;
+      email: string;
+    };
   }
 }
 
@@ -14,6 +18,7 @@ interface ImportMetaEnv {
   readonly OPENROUTER_MODEL?: string;
   readonly SUPABASE_URL: string;
   readonly SUPABASE_ANON_KEY: string;
+  readonly SUPABASE_SERVICE_ROLE_KEY: string;
   readonly DEFAULT_USER_ID?: string;
 }
 

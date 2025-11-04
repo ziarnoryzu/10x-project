@@ -134,4 +134,33 @@
   .animate-fadeIn {
     animation: fadeIn 0.3s ease-out;
   }
+
+  /* Autofill detection animation */
+  @keyframes onAutoFillStart {
+    from {
+      /**/
+    }
+    to {
+      /**/
+    }
+  }
+
+  @keyframes onAutoFillCancel {
+    from {
+      /**/
+    }
+    to {
+      /**/
+    }
+  }
+
+  input:-webkit-autofill {
+    animation-name: onAutoFillStart;
+    animation-duration: 0.001s;
+  }
+
+  input:not(:-webkit-autofill) {
+    animation-name: onAutoFillCancel;
+    animation-duration: 0.001s;
+  }
 }

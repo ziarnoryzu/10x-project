@@ -1,31 +1,90 @@
-import { useState, useCallback, useId } from "react";
+import { useState, useCallback, useId, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/ui/form-error";
+import { OnboardingModal } from "@/components/auth/OnboardingModal";
+import type { LoginResponseDTO } from "@/types/auth.types";
 
 interface LoginFormProps {
   redirectTo?: string;
   successMessage?: string | null;
 }
 
-export function LoginForm({ redirectTo = "/app", successMessage = null }: LoginFormProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export function LoginForm({ redirectTo = "/app/notes", successMessage = null }: LoginFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [hasValues, setHasValues] = useState(false);
+
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const emailId = useId();
   const passwordId = useId();
   const errorId = useId();
 
-  const canSubmit = email.length > 0 && password.length > 0 && !isSubmitting;
+  // Check if form has values (including autofill)
+  useEffect(() => {
+    const checkValues = () => {
+      const emailValue = emailInputRef.current?.value || "";
+      const passwordValue = passwordInputRef.current?.value || "";
+      setHasValues(emailValue.length > 0 && passwordValue.length > 0);
+    };
+
+    // Check immediately and with delays to catch autofill
+    checkValues();
+    const timeoutId1 = setTimeout(checkValues, 100);
+    const timeoutId2 = setTimeout(checkValues, 300);
+    const timeoutId3 = setTimeout(checkValues, 500);
+
+    // Listen for autofill events
+    const emailInput = emailInputRef.current;
+    const passwordInput = passwordInputRef.current;
+
+    const handleAnimationStart = (e: AnimationEvent) => {
+      if (e.animationName === "mui-auto-fill" || e.animationName === "onAutoFillStart") {
+        checkValues();
+      }
+    };
+
+    emailInput?.addEventListener("animationstart", handleAnimationStart as EventListener);
+    passwordInput?.addEventListener("animationstart", handleAnimationStart as EventListener);
+
+    // Also listen for input events
+    emailInput?.addEventListener("input", checkValues);
+    passwordInput?.addEventListener("input", checkValues);
+
+    return () => {
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+      clearTimeout(timeoutId3);
+      emailInput?.removeEventListener("animationstart", handleAnimationStart as EventListener);
+      passwordInput?.removeEventListener("animationstart", handleAnimationStart as EventListener);
+      emailInput?.removeEventListener("input", checkValues);
+      passwordInput?.removeEventListener("input", checkValues);
+    };
+  }, []);
+
+  const canSubmit = hasValues && !isSubmitting;
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
-      if (!canSubmit) return;
+      // Check values one more time before submit
+      const formData = new FormData(e.currentTarget);
+      const emailValue = (formData.get("email") as string)?.trim() || "";
+      const passwordValue = (formData.get("password") as string) || "";
+
+      if (!emailValue || !passwordValue || isSubmitting) return;
+
+      // Client-side email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailValue)) {
+        setError("Nieprawidłowy format adresu email");
+        return;
+      }
 
       setError(null);
       setIsSubmitting(true);
@@ -37,37 +96,47 @@ export function LoginForm({ redirectTo = "/app", successMessage = null }: LoginF
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: email.trim(),
-            password,
+            email: emailValue,
+            password: passwordValue,
           }),
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-          setError(data.message || "Nieprawidłowy email lub hasło");
+          const errorData = await response.json();
+          setError(errorData.message || "Nieprawidłowy email lub hasło");
           setIsSubmitting(false);
           return;
         }
 
-        // Redirect to target page
-        window.location.href = redirectTo;
+        const data: LoginResponseDTO = await response.json();
+
+        // Check if user needs onboarding
+        if (data.needsOnboarding) {
+          // Show onboarding modal
+          setShowOnboarding(true);
+          setIsSubmitting(false);
+        } else {
+          // Redirect to target page
+          window.location.href = redirectTo;
+        }
       } catch {
         setError("Wystąpił błąd połączenia. Spróbuj ponownie.");
         setIsSubmitting(false);
       }
     },
-    [canSubmit, email, password, redirectTo]
+    [redirectTo, isSubmitting]
   );
 
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    setError(null);
-  }, []);
+  const handleOnboardingComplete = useCallback(() => {
+    // After onboarding is complete, redirect to target page
+    window.location.href = redirectTo;
+  }, [redirectTo]);
 
-  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    setError(null);
+  const handleButtonMouseEnter = useCallback(() => {
+    // Last chance to check values when hovering over submit button
+    const emailValue = emailInputRef.current?.value || "";
+    const passwordValue = passwordInputRef.current?.value || "";
+    setHasValues(emailValue.length > 0 && passwordValue.length > 0);
   }, []);
 
   return (
@@ -86,10 +155,10 @@ export function LoginForm({ redirectTo = "/app", successMessage = null }: LoginF
         <div className="space-y-2">
           <Label htmlFor={emailId}>Email</Label>
           <Input
+            ref={emailInputRef}
             id={emailId}
+            name="email"
             type="email"
-            value={email}
-            onChange={handleEmailChange}
             placeholder="jan@example.com"
             disabled={isSubmitting}
             autoComplete="email"
@@ -102,7 +171,7 @@ export function LoginForm({ redirectTo = "/app", successMessage = null }: LoginF
           <div className="flex items-center justify-between">
             <Label htmlFor={passwordId}>Hasło</Label>
             <a
-              href="/forgot-password"
+              href="/auth/forgot-password"
               className="text-sm text-primary hover:underline"
               tabIndex={isSubmitting ? -1 : 0}
             >
@@ -110,10 +179,10 @@ export function LoginForm({ redirectTo = "/app", successMessage = null }: LoginF
             </a>
           </div>
           <Input
+            ref={passwordInputRef}
             id={passwordId}
+            name="password"
             type="password"
-            value={password}
-            onChange={handlePasswordChange}
             placeholder="••••••••"
             disabled={isSubmitting}
             autoComplete="current-password"
@@ -122,9 +191,19 @@ export function LoginForm({ redirectTo = "/app", successMessage = null }: LoginF
         </div>
       </div>
 
-      <Button type="submit" disabled={!canSubmit} className="w-full">
+      <Button
+        type="submit"
+        className="w-full"
+        onMouseEnter={handleButtonMouseEnter}
+        onFocus={handleButtonMouseEnter}
+        disabled={!canSubmit}
+        aria-disabled={!canSubmit}
+      >
         {isSubmitting ? "Logowanie..." : "Zaloguj się"}
       </Button>
+
+      {/* Onboarding Modal */}
+      <OnboardingModal isOpen={showOnboarding} onComplete={handleOnboardingComplete} />
     </form>
   );
 }
