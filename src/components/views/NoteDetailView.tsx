@@ -15,6 +15,7 @@ import { NoteEditor } from "@/components/note-detail/NoteEditor";
 import { NoteActions } from "@/components/note-detail/NoteActions";
 import { TravelPlanView } from "@/components/note-detail/TravelPlanView";
 import { toast } from "sonner";
+import { navigate, reload, Routes, getReturnUrl, getQueryParam } from "@/lib/services/navigation.service";
 import type { NoteEditorViewModel, UpdateNoteDTO } from "@/types";
 
 interface NoteDetailViewProps {
@@ -42,26 +43,19 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
   const { note: noteWithPlan, refetch: refetchNoteWithPlan } = useNoteWithPlan(noteId);
   const [showGeneratePlanModal, setShowGeneratePlanModal] = useState(false);
 
-  // Get return page from URL params
-  const getReturnUrl = () => {
-    if (typeof window === "undefined") return "/app/notes";
-    const params = new URLSearchParams(window.location.search);
-    const returnPage = params.get("returnPage");
-    return returnPage && parseInt(returnPage, 10) > 1 ? `/app/notes?page=${returnPage}` : "/app/notes";
-  };
+  // Get return URL using navigation service
+  const returnUrl = getReturnUrl();
 
   // Handle note not found or error
   useEffect(() => {
     if (error === "Note not found") {
       toast.error("Nie znaleziono notatki");
-      setTimeout(() => {
-        window.location.href = getReturnUrl();
-      }, 2000);
+      navigate(returnUrl, { delay: 2000 });
     } else if (error && autosaveStatus !== "error") {
       // Show toast for errors other than autosave errors (which are shown inline)
       toast.error(error);
     }
-  }, [error, autosaveStatus]);
+  }, [error, autosaveStatus, returnUrl]);
 
   // Show loading state
   if (isLoading) {
@@ -119,10 +113,10 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
           </p>
 
           <div className="flex gap-3">
-            <Button onClick={() => window.location.reload()} variant="default">
+            <Button onClick={() => reload()} variant="default">
               Spróbuj ponownie
             </Button>
-            <Button onClick={() => (window.location.href = getReturnUrl())} variant="outline">
+            <Button onClick={() => navigate(returnUrl)} variant="outline">
               Powrót do listy
             </Button>
           </div>
@@ -147,13 +141,12 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
 
     if (newNoteId) {
       toast.success("Notatka została skopiowana");
-      setTimeout(() => {
-        // Preserve returnPage parameter when navigating to the copied note
-        const params = new URLSearchParams(window.location.search);
-        const returnPage = params.get("returnPage");
-        const newUrl = returnPage ? `/app/notes/${newNoteId}?returnPage=${returnPage}` : `/app/notes/${newNoteId}`;
-        window.location.href = newUrl;
-      }, 1000);
+
+      // Preserve returnPage parameter when navigating to the copied note
+      const returnPage = getQueryParam("returnPage");
+      const newNoteUrl = Routes.notes.detail(newNoteId, returnPage ? parseInt(returnPage, 10) : undefined);
+
+      await navigate(newNoteUrl, { delay: 1000 });
     } else {
       toast.error("Nie udało się skopiować notatki");
     }
@@ -166,9 +159,7 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
     if (success) {
       toast.success("Notatka została usunięta");
       setIsDeleteDialogOpen(false);
-      setTimeout(() => {
-        window.location.href = getReturnUrl();
-      }, 1000);
+      await navigate(returnUrl, { delay: 1000 });
     } else {
       toast.error("Nie udało się usunąć notatki");
     }
@@ -202,7 +193,7 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
         <div>
           <Button
             variant="ghost"
-            onClick={() => (window.location.href = getReturnUrl())}
+            onClick={() => navigate(returnUrl)}
             className="mb-2"
             aria-label="Powrót do listy notatek"
           >

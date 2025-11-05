@@ -1,4 +1,5 @@
 ---
+import { ViewTransitions } from "astro:transitions";
 import "../styles/global.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -20,16 +21,17 @@ const activePath = Astro.url.pathname;
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    <ViewTransitions />
   </head>
   <body>
     <div class="flex h-screen flex-col md:grid md:grid-cols-[240px_1fr] md:grid-rows-1">
       <!-- Desktop Sidebar -->
-      <Sidebar client:load activePath={activePath} />
+      <Sidebar client:load activePath={activePath} transition:persist />
 
       <!-- Main content area -->
       <div class="flex min-h-0 flex-1 flex-col">
         <!-- Mobile header -->
-        <header class="flex h-14 items-center border-b px-4 md:hidden">
+        <header class="flex h-14 items-center border-b px-4 md:hidden" transition:persist>
           <MobileNav client:load activePath={activePath} />
           <h1 class="ml-4 text-lg font-semibold">VibeTravels</h1>
         </header>
@@ -41,7 +43,7 @@ const activePath = Astro.url.pathname;
       </div>
     </div>
 
-    <Toaster client:load />
+    <Toaster client:load transition:persist="toaster" />
   </body>
 </html>
 

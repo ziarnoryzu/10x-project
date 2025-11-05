@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { navigate, Routes } from "@/lib/services/navigation.service";
 
 export function DeleteAccountButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +39,7 @@ export function DeleteAccountButton() {
       }
 
       // Redirect to home page after successful deletion
-      window.location.href = "/";
+      await navigate(Routes.home());
     } catch {
       setError("Wystąpił błąd połączenia. Spróbuj ponownie.");
       setIsDeleting(false);

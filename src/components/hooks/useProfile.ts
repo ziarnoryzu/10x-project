@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { navigate, Routes } from "@/lib/services/navigation.service";
 import type { UserProfileDTO, UpdateUserProfileDTO, ChangePasswordDTO } from "@/types";
 
 interface UseProfileReturn {
@@ -122,7 +123,7 @@ export function useProfile(): UseProfileReturn {
 
       // Redirect to home page after successful deletion
       // In a real app with auth, this would redirect to /login
-      window.location.href = "/";
+      await navigate(Routes.home());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Nie udało się usunąć konta. Spróbuj ponownie.";
       setError(errorMessage);

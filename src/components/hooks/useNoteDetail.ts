@@ -7,7 +7,6 @@ import type {
   TravelPlanDTO,
   TypedTravelPlan,
   TravelPlanContent,
-  GenerationOptions,
 } from "@/types";
 
 interface UseNoteDetailReturn {
@@ -88,6 +87,9 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
     setIsLoading(true);
     setError(null);
 
+    // Track start time to ensure minimum loading state display
+    const startTime = Date.now();
+
     try {
       // Fetch note
       const noteResponse = await fetch(`/api/notes/${noteId}`, {
@@ -116,7 +118,7 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
         const planData: TravelPlanDTO = await planResponse.json();
         travelPlan = {
           ...planData,
-          content: planData.content as TravelPlanContent,
+          content: planData.content as unknown as TravelPlanContent,
         };
       }
 
@@ -135,6 +137,13 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
         wordCount,
         isReadyForPlanGeneration,
       };
+
+      // Ensure minimum loading time (300ms) for smooth UX with View Transitions
+      const elapsed = Date.now() - startTime;
+      const minLoadingTime = 300;
+      if (elapsed < minLoadingTime) {
+        await new Promise((resolve) => setTimeout(resolve, minLoadingTime - elapsed));
+      }
 
       setNote(viewModel);
       lastSavedRef.current = noteData.updated_at;
@@ -163,7 +172,7 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
       const planData: TravelPlanDTO = await planResponse.json();
       travelPlan = {
         ...planData,
-        content: planData.content as TravelPlanContent,
+        content: planData.content as unknown as TravelPlanContent,
       };
     }
 
@@ -181,7 +190,7 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
         ...pendingChangesRef.current,
         ...changes,
       };
-      
+
       // Optimistic update
       setNote((prev) => {
         if (!prev) return null;
@@ -199,15 +208,15 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      
+
       // Debounced save
       saveTimeoutRef.current = setTimeout(async () => {
         // Capture all accumulated changes
         const changesToSave = { ...pendingChangesRef.current };
-        
+
         // Clear pending changes since we're saving them now
         pendingChangesRef.current = {};
-        
+
         setAutosaveStatus("saving");
         setError(null);
 

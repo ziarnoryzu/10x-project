@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { navigate } from "@/lib/services/navigation.service";
 import type { NoteListItemViewModel } from "../types";
 
 interface NoteListItemProps {
@@ -13,6 +14,7 @@ interface NoteListItemProps {
  * Receives pre-formatted data from the ViewModel
  * Memoized to prevent unnecessary re-renders
  */
+/* eslint-disable react/prop-types */
 export const NoteListItem = memo<NoteListItemProps>(function NoteListItem({ note, currentPage, onClick }) {
   // Generate href with returnPage parameter
   const href = `${note.href}?returnPage=${currentPage}`;
@@ -21,7 +23,7 @@ export const NoteListItem = memo<NoteListItemProps>(function NoteListItem({ note
     if (onClick) {
       onClick();
     } else {
-      window.location.href = href;
+      navigate(href);
     }
   };
 

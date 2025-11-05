@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type {
-  NoteListItemDTO,
-  NoteListItemViewModel,
-  PaginationViewModel,
-  NotesListApiResponseViewModel,
-} from "../../types";
+import type { NoteListItemDTO, NoteListItemViewModel, PaginationViewModel, NotesListApiResponse } from "../../types";
 
 interface UseNotesListReturn {
   notes: NoteListItemViewModel[];
@@ -68,6 +63,9 @@ export function useNotesList(page = 1): UseNotesListReturn {
     setIsLoading(true);
     setError(null);
 
+    // Track start time to ensure minimum loading state display
+    const startTime = Date.now();
+
     try {
       const response = await fetch(`/api/notes?page=${page}&limit=20`);
 
@@ -75,10 +73,17 @@ export function useNotesList(page = 1): UseNotesListReturn {
         throw new Error("Failed to fetch notes");
       }
 
-      const data: NotesListApiResponseViewModel = await response.json();
+      const data: NotesListApiResponse = await response.json();
 
       // Transform DTOs to ViewModels
       const viewModels = data.notes.map(transformNoteToViewModel);
+
+      // Ensure minimum loading time (300ms) for smooth UX with View Transitions
+      const elapsed = Date.now() - startTime;
+      const minLoadingTime = 300;
+      if (elapsed < minLoadingTime) {
+        await new Promise((resolve) => setTimeout(resolve, minLoadingTime - elapsed));
+      }
 
       setNotes(viewModels);
       setPagination(data.pagination);

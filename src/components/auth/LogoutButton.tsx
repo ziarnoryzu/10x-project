@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { navigate, Routes } from "@/lib/services/navigation.service";
 
 interface LogoutButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
@@ -30,7 +31,7 @@ export function LogoutButton({
       });
 
       if (response.ok) {
-        window.location.href = "/auth/login";
+        await navigate(Routes.auth.login());
       } else {
         setIsLoggingOut(false);
       }

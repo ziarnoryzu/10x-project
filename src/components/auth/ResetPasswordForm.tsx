@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/ui/form-error";
 import { PasswordStrength, validatePassword } from "@/components/ui/password-strength";
+import { navigate, buildUrl } from "@/lib/services/navigation.service";
 
 interface ResetPasswordFormProps {
   code: string;
@@ -54,7 +55,7 @@ export function ResetPasswordForm({ code }: ResetPasswordFormProps) {
         }
 
         // Redirect to login with success message
-        window.location.href = "/auth/login?success=password-reset";
+        await navigate(buildUrl("/auth/login", { success: "password-reset" }));
       } catch {
         setError("Wystąpił błąd połączenia. Spróbuj ponownie.");
         setIsSubmitting(false);
@@ -97,7 +98,6 @@ export function ResetPasswordForm({ code }: ResetPasswordFormProps) {
             aria-invalid={!isPasswordValid && password.length > 0}
             disabled={isSubmitting}
             autoComplete="new-password"
-            autoFocus
             required
           />
           <PasswordStrength password={password} />

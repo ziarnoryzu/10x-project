@@ -164,3 +164,48 @@
     animation-duration: 0.001s;
   }
 }
+
+/* View Transitions - Subtle, natural animations */
+@media (prefers-reduced-motion: no-preference) {
+  /* Smooth, subtle transitions - longer to avoid flickering */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Simple crossfade - no slides */
+  ::view-transition-old(root) {
+    animation-name: subtle-fade-out;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: subtle-fade-in;
+  }
+
+  @keyframes subtle-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes subtle-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}

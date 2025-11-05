@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/ui/form-error";
 import { PasswordStrength, validatePassword } from "@/components/ui/password-strength";
 import { OnboardingModal } from "./OnboardingModal";
+import { navigate, Routes } from "@/lib/services/navigation.service";
 
 interface RegisterFormProps {
   initialError?: string | null;
@@ -96,7 +97,7 @@ export function RegisterForm({ initialError = null }: RegisterFormProps) {
 
   const handleOnboardingComplete = useCallback(() => {
     setShowOnboarding(false);
-    window.location.href = "/app/notes";
+    navigate(Routes.notes.list());
   }, []);
 
   return (

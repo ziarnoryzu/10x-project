@@ -7,6 +7,7 @@ import { EmptyState } from "../EmptyState";
 import { OnboardingBanner } from "../OnboardingBanner";
 import { NotesListSkeleton } from "../NotesListSkeleton";
 import { Pagination } from "../Pagination";
+import { navigate, reload, Routes } from "@/lib/services/navigation.service";
 
 /**
  * NotesListView - Main component for displaying the notes list dashboard
@@ -52,7 +53,7 @@ export function NotesListView() {
     try {
       const newNoteId = await createNote();
       // Navigate to the new note, preserving the current page for return navigation
-      window.location.href = `/app/notes/${newNoteId}?returnPage=${currentPage}`;
+      await navigate(Routes.notes.detail(newNoteId, currentPage));
     } catch {
       // Error is already handled in the hook and displayed via error state
       toast.error("Nie udało się utworzyć notatki. Spróbuj ponownie.");
@@ -138,7 +139,7 @@ export function NotesListView() {
         </div>
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
           <p className="text-red-800">{error}</p>
-          <Button onClick={() => window.location.reload()} variant="outline" className="mt-4 w-full sm:w-auto">
+          <Button onClick={() => reload()} variant="outline" className="mt-4 w-full sm:w-auto">
             Odśwież stronę
           </Button>
         </div>

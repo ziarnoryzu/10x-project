@@ -68,6 +68,15 @@ export interface NoteListItemViewModel {
 }
 
 /**
+ * NotesListApiResponse represents the API response for GET /api/notes
+ * Contains notes list and pagination metadata
+ */
+export interface NotesListApiResponse {
+  notes: NoteListItemDTO[];
+  pagination: PaginationViewModel;
+}
+
+/**
  * TravelPlanDTO represents an AI-generated travel plan.
  * Derived from the 'travel_plans' table.
  */

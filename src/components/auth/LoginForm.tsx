@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/ui/form-error";
 import { OnboardingModal } from "@/components/auth/OnboardingModal";
+import { navigate } from "@/lib/services/navigation.service";
 import type { LoginResponseDTO } from "@/types/auth.types";
 
 interface LoginFormProps {
@@ -117,7 +118,7 @@ export function LoginForm({ redirectTo = "/app/notes", successMessage = null }: 
           setIsSubmitting(false);
         } else {
           // Redirect to target page
-          window.location.href = redirectTo;
+          await navigate(redirectTo);
         }
       } catch {
         setError("Wystąpił błąd połączenia. Spróbuj ponownie.");
@@ -129,7 +130,7 @@ export function LoginForm({ redirectTo = "/app/notes", successMessage = null }: 
 
   const handleOnboardingComplete = useCallback(() => {
     // After onboarding is complete, redirect to target page
-    window.location.href = redirectTo;
+    navigate(redirectTo);
   }, [redirectTo]);
 
   const handleButtonMouseEnter = useCallback(() => {
