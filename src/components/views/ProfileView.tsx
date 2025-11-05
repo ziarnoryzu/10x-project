@@ -59,13 +59,6 @@ export function ProfileView() {
     );
   }
 
-  // Handler for updating name
-  const handleUpdateName = async (name: string) => {
-    const data: UpdateUserProfileDTO = { name };
-    await updateProfile(data);
-    toast.success("Imię zaktualizowane");
-  };
-
   // Handler for updating preferences
   const handleUpdatePreferences = async (preferences: string[]) => {
     const data: UpdateUserProfileDTO = { preferences };
@@ -101,7 +94,7 @@ export function ProfileView() {
             <h2 className="text-xl font-semibold">Dane osobowe</h2>
             <p className="text-sm text-muted-foreground">Zaktualizuj swoje podstawowe informacje</p>
           </div>
-          <ProfileForm initialName={profile.name} onUpdate={handleUpdateName} isSaving={isSaving} />
+          <ProfileForm initialName={profile.name} />
         </section>
 
         {/* Section 2: Security */}

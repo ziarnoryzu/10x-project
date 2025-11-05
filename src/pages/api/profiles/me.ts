@@ -11,7 +11,7 @@ export const prerender = false;
 // Zod schema for update request body
 const UpdateProfileSchema = z
   .object({
-    name: z.string().min(1, "Name cannot be empty").optional(),
+    name: z.string().min(2, "Name must be at least 2 characters long").optional(),
     preferences: z.array(z.string()).optional(),
   })
   .refine((data) => data.name !== undefined || data.preferences !== undefined, {
@@ -24,6 +24,20 @@ const UpdateProfileSchema = z
  * Retrieves the authenticated user's profile.
  */
 export const GET: APIRoute = async ({ locals }) => {
+  // Check authentication
+  if (!locals.user) {
+    return new Response(
+      JSON.stringify({
+        error: "Unauthorized",
+        message: "Authentication required",
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -98,6 +112,20 @@ export const GET: APIRoute = async ({ locals }) => {
  * Name is required, preferences are optional.
  */
 export const PUT: APIRoute = async ({ request, locals }) => {
+  // Check authentication
+  if (!locals.user) {
+    return new Response(
+      JSON.stringify({
+        error: "Unauthorized",
+        message: "Authentication required",
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -240,6 +268,20 @@ export const PUT: APIRoute = async ({ request, locals }) => {
  * - User's auth account (if implemented)
  */
 export const DELETE: APIRoute = async ({ locals }) => {
+  // Check authentication
+  if (!locals.user) {
+    return new Response(
+      JSON.stringify({
+        error: "Unauthorized",
+        message: "Authentication required",
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;

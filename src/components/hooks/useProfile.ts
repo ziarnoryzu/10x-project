@@ -77,8 +77,8 @@ export function useProfile(): UseProfileReturn {
       setIsSaving(true);
       setError(null);
 
-      const response = await fetch("/api/auth/password", {
-        method: "PUT",
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },

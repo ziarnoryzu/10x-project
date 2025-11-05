@@ -111,24 +111,38 @@
 **Lokalizacja:** `src/components/profile/ProfileForm.tsx`
 
 **Odpowiedzialność:**
-- Umożliwienie edycji danych profilowych (np. imię, preferencje).
-- Komunikacja z endpointem API `/api/profile` w celu zapisania zmian.
-- Wyświetlanie komunikatów o sukcesie lub błędzie.
+- Umożliwienie edycji imienia użytkownika.
+- Walidacja wprowadzonych danych (minimum 2 znaki).
+- Komunikacja z endpointem API `/api/profiles/me` w celu zapisania zmian.
+- Wyświetlanie komunikatów o sukcesie (toast notification) lub błędzie.
+- Automatyczne odświeżenie strony po pomyślnym zapisaniu.
 
 #### Formularz Zmiany Hasła
 **Lokalizacja:** `src/components/profile/ChangePasswordForm.tsx`
 
 **Odpowiedzialność:**
 - Umożliwienie zalogowanemu użytkownikowi zmiany hasła.
+- Walidacja w czasie rzeczywistym (nowe hasło, potwierdzenie, siła hasła).
 - Komunikacja z endpointem API `/api/auth/change-password`.
-- Wyświetlanie komunikatów zwrotnych.
+- Wyświetlanie wskaźnika siły hasła.
+- Wyświetlanie komunikatów zwrotnych (sukces/błąd).
+- Czyszczenie formularza po pomyślnej zmianie.
+
+#### Formularz Preferencji Turystycznych
+**Lokalizacja:** `src/components/profile/TravelPreferencesForm.tsx`
+
+**Odpowiedzialność:**
+- Umożliwienie zarządzania preferencjami turystycznymi użytkownika.
+- Prezentacja predefiniowanych tagów w kategoriach (styl, zainteresowania, kuchnia, tempo).
+- Komunikacja z endpointem API `/api/profiles/me` w celu zapisania preferencji.
+- Wyświetlanie komunikatów o sukcesie lub błędzie.
 
 #### Przycisk Usuwania Konta
 **Lokalizacja:** `src/components/profile/DeleteAccountButton.tsx`
 
 **Odpowiedzialność:**
 - Inicjowanie procesu usuwania konta, w tym wyświetlenie modala z potwierdzeniem.
-- Komunikacja z endpointem API `/api/auth/delete-account`.
+- Komunikacja z endpointem API `DELETE /api/profiles/me`.
 - Wylogowanie i przekierowanie użytkownika po pomyślnym usunięciu konta.
 
 #### Komponent Wylogowania
@@ -182,18 +196,40 @@ Wszystkie endpointy będą zlokalizowane w `src/pages/api/auth/` i będą render
 
 #### Endpoint Zmiany Hasła (`/api/auth/change-password.ts`, POST)
 - Wymaga aktywnej sesji użytkownika.
-- Waliduje stare i nowe hasło.
-- Aktualizuje hasło zalogowanego użytkownika (`updateUser`), wymagając podania starego hasła.
+- Waliduje obecne i nowe hasło przy użyciu schematu Zod.
+- Weryfikuje poprawność obecnego hasła poprzez próbę logowania (`signInWithPassword`).
+- Aktualizuje hasło zalogowanego użytkownika (`updateUser`).
+- Zwraca komunikat sukcesu lub odpowiedni błąd (np. "Obecne hasło jest nieprawidłowe").
 
-#### Endpoint Usuwania Konta (`/api/auth/delete-account.ts`, DELETE)
+#### Endpoint Usuwania Konta (obsługiwany przez DELETE `/api/profiles/me.ts`)
 - Wymaga aktywnej sesji użytkownika.
-- Używa klienta administracyjnego Supabase do usunięcia użytkownika z systemu Auth (`admin.deleteUser`).
-- Powiązane dane (profil, notatki) zostaną usunięte kaskadowo dzięki relacjom w bazie danych.
+- Usuwa kaskadowo wszystkie powiązane dane:
+  - Wszystkie plany podróży powiązane z notatkami użytkownika
+  - Wszystkie notatki użytkownika
+  - Profil użytkownika
+- W przyszłości powinien używać klienta administracyjnego Supabase do usunięcia użytkownika z systemu Auth (`admin.deleteUser`).
+- Zwraca komunikat sukcesu po pomyślnym usunięciu.
 
-#### Endpoint Aktualizacji Profilu (`/api/profile.ts`, PUT)
+#### Endpoint Aktualizacji Profilu (`/api/profiles/me.ts`, GET/PUT/DELETE)
+
+**GET /api/profiles/me:**
 - Wymaga aktywnej sesji użytkownika.
-- Waliduje dane profilowe.
-- Aktualizuje odpowiedni wiersz w tabeli `profiles`.
+- Pobiera dane profilu zalogowanego użytkownika z tabeli `profiles`.
+- Zwraca obiekt UserProfileDTO zawierający id, email, imię i preferencje.
+
+**PUT /api/profiles/me:**
+- Wymaga aktywnej sesji użytkownika.
+- Waliduje dane profilowe (imię i/lub preferencje) przy użyciu schematu Zod.
+- Wymaga podania co najmniej jednego pola (name lub preferences).
+- Aktualizuje odpowiedni wiersz w tabeli `profiles` dla zalogowanego użytkownika.
+- Zwraca zaktualizowane dane profilu lub odpowiedni komunikat błędu.
+
+**DELETE /api/profiles/me:**
+- Wymaga aktywnej sesji użytkownika.
+- Usuwa wszystkie plany podróży powiązane z notatkami użytkownika.
+- Usuwa wszystkie notatki użytkownika.
+- Usuwa profil użytkownika z tabeli `profiles`.
+- W przyszłości powinno także usuwać użytkownika z Supabase Auth (wymaga admin privileges).
 
 ### 2.2 Modele Danych (Typy TypeScript)
 

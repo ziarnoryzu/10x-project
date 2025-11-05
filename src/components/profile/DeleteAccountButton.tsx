@@ -23,7 +23,7 @@ export function DeleteAccountButton() {
     setIsDeleting(true);
 
     try {
-      const response = await fetch("/api/auth/delete-account", {
+      const response = await fetch("/api/profiles/me", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -54,17 +54,21 @@ export function DeleteAccountButton() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Czy na pewno chcesz usunąć konto?</DialogTitle>
-          <DialogDescription className="space-y-2">
-            <p>Ta operacja jest nieodwracalna. Wszystkie Twoje dane zostaną trwale usunięte, w tym:</p>
-            <ul className="list-inside list-disc space-y-1 text-sm">
-              <li>Profil użytkownika</li>
-              <li>Wszystkie notatki podróżnicze</li>
-              <li>Wygenerowane plany podróży</li>
-              <li>Preferencje i ustawienia</li>
-            </ul>
-            <p className="font-medium">Tej akcji nie można cofnąć.</p>
+          <DialogDescription>
+            Ta operacja jest nieodwracalna. Wszystkie Twoje dane zostaną trwale usunięte.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">Zostaną usunięte:</p>
+          <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+            <li>Profil użytkownika</li>
+            <li>Wszystkie notatki podróżnicze</li>
+            <li>Wygenerowane plany podróży</li>
+            <li>Preferencje i ustawienia</li>
+          </ul>
+          <p className="text-sm font-medium text-destructive">Tej akcji nie można cofnąć.</p>
+        </div>
 
         {error && (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">

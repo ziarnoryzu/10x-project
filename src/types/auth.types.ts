@@ -62,7 +62,7 @@ export interface ResetPasswordRequestDTO {
 }
 
 /**
- * ChangePasswordRequestDTO - payload sent to /api/auth/change-password
+ * ChangePasswordRequestDTO - payload sent to POST /api/auth/change-password
  */
 export interface ChangePasswordRequestDTO {
   currentPassword: string;

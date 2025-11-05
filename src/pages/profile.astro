@@ -59,25 +59,7 @@ const title = "Profil - VibeTravels";
           <p class="mt-1 text-sm text-muted-foreground">Zaktualizuj swoje dane osobowe</p>
         </div>
 
-        <ProfileForm
-          client:load
-          initialName={profileData.name}
-          onUpdate={async (name: string) => {
-            const response = await fetch("/api/profiles/me", {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-              body: JSON.stringify({ name }),
-            });
-
-            if (!response.ok) {
-              const data = await response.json();
-              throw new Error(data.message || "Nie udało się zapisać zmian");
-            }
-          }}
-        />
+        <ProfileForm client:load initialName={profileData.name} />
 
         <div class="mt-6 rounded-md bg-muted p-4">
           <div class="flex items-start gap-3">
