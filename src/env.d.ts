@@ -6,10 +6,12 @@ import type { SupabaseClient } from "./db/supabase.client";
 declare namespace App {
   interface Locals {
     supabase: SupabaseClient;
-    user?: {
-      id: string;
-      email: string;
-    };
+    user:
+      | {
+          id: string;
+          email: string;
+        }
+      | undefined;
   }
 }
 

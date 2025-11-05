@@ -1,0 +1,134 @@
+PROJECT ROOT (10x-project)
+│
+├─── PAGES (Entry Points - Astro)
+│    │
+│    ├─── index.astro
+│    │    └─── Layout.astro
+│    │         └─── ui/sonner (Toaster)
+│    │
+│    ├─── /auth/
+│    │    ├─── login.astro
+│    │    ├─── register.astro
+│    │    ├─── forgot-password.astro
+│    │    └─── reset-password.astro
+│    │         └─── AuthLayout.astro
+│    │              ├─── ui/sonner (Toaster)
+│    │              └─── auth/*Form.tsx
+│    │                   ├─── LoginForm
+│    │                   ├─── RegisterForm
+│    │                   ├─── ForgotPasswordForm
+│    │                   └─── ResetPasswordForm
+│    │
+│    └─── /app/
+│         ├─── /notes/
+│         │    ├─── index.astro
+│         │    │    └─── MainLayout.astro
+│         │    │         ├─── ui/sonner (Toaster)
+│         │    │         ├─── layout/Sidebar
+│         │    │         │    └─── layout/NavLink
+│         │    │         ├─── layout/MobileNav
+│         │    │         │    └─── layout/NavLink
+│         │    │         └─── views/NotesListView
+│         │    │              ├─── hooks/useNotesList
+│         │    │              ├─── ui/button (Button)
+│         │    │              ├─── NotesList
+│         │    │              │    └─── NoteListItem
+│         │    │              ├─── EmptyState
+│         │    │              ├─── OnboardingBanner
+│         │    │              │    ├─── ui/alert
+│         │    │              │    └─── ui/button
+│         │    │              ├─── NotesListSkeleton
+│         │    │              │    └─── ui/skeleton
+│         │    │              └─── Pagination
+│         │    │                   └─── ui/button
+│         │    │
+│         │    └─── [noteId].astro
+│         │         └─── MainLayout.astro
+│         │              └─── views/NoteDetailView
+│         │                   ├─── hooks/useNoteDetail
+│         │                   ├─── hooks/useNoteWithPlan
+│         │                   ├─── ui/button
+│         │                   ├─── travel-plan/GeneratePlanModal
+│         │                   │    ├─── hooks/useGeneratePlan
+│         │                   │    ├─── ui/dialog
+│         │                   │    ├─── travel-plan/GenerationOptionsForm
+│         │                   │    │    ├─── ui/form
+│         │                   │    │    ├─── ui/select
+│         │                   │    │    ├─── ui/input
+│         │                   │    │    └─── ui/button
+│         │                   │    ├─── travel-plan/LoadingView
+│         │                   │    │    └─── ui/spinner
+│         │                   │    ├─── travel-plan/GeneratedPlanView
+│         │                   │    │    ├─── ui/card
+│         │                   │    │    ├─── ui/badge
+│         │                   │    │    └─── ui/button
+│         │                   │    └─── travel-plan/ErrorView
+│         │                   │         ├─── ui/alert
+│         │                   │         └─── ui/button
+│         │                   ├─── note-detail/NoteEditor
+│         │                   │    ├─── ui/input
+│         │                   │    └─── ui/textarea
+│         │                   ├─── note-detail/NoteActions
+│         │                   │    └─── ui/button
+│         │                   └─── note-detail/TravelPlanView
+│         │                        ├─── ui/card
+│         │                        ├─── ui/badge
+│         │                        └─── ui/button
+│         │
+│         └─── /profile/
+│              └─── index.astro
+│                   └─── MainLayout.astro
+│                        └─── views/ProfileView
+│                             ├─── hooks/useProfile
+│                             ├─── ui/skeleton
+│                             ├─── profile/ProfileForm
+│                             │    ├─── ui/form
+│                             │    ├─── ui/input
+│                             │    └─── ui/button
+│                             ├─── profile/PasswordChangeForm
+│                             │    ├─── ui/form
+│                             │    ├─── ui/input
+│                             │    └─── ui/button
+│                             ├─── profile/PreferencesManager
+│                             │    └─── profile/ProfilePreferencesForm
+│                             │         ├─── ui/form
+│                             │         └─── profile/TravelPreferencesForm
+│                             │              ├─── ui/select
+│                             │              ├─── ui/input
+│                             │              └─── ui/button
+│                             └─── profile/DeleteAccountSection
+│                                  ├─── profile/DeleteAccountButton
+│                                  │    ├─── ui/dialog
+│                                  │    └─── ui/button
+│                                  └─── ui/alert
+│
+├─── LAYOUTS (Shared Layouts)
+│    ├─── Layout.astro (Base)
+│    ├─── AuthLayout.astro (Authentication pages)
+│    └─── MainLayout.astro (Authenticated app pages)
+│
+├─── COMPONENTS (Reusable UI)
+│    ├─── /ui/ (Shadcn components)
+│    │    ├─── button, input, textarea
+│    │    ├─── card, badge, alert
+│    │    ├─── dialog, form, select
+│    │    ├─── skeleton, spinner, sonner
+│    │    └─── ... (other Shadcn UI primitives)
+│    │
+│    ├─── /views/ (Top-level view containers)
+│    ├─── /auth/ (Authentication forms)
+│    ├─── /profile/ (Profile management)
+│    ├─── /note-detail/ (Note editing)
+│    ├─── /travel-plan/ (Travel plan generation)
+│    ├─── /layout/ (Navigation components)
+│    └─── /hooks/ (Custom React hooks)
+│
+├─── SERVICES & UTILITIES
+│    ├─── /lib/services/ (Business logic)
+│    ├─── /lib/utils/ (Helper functions)
+│    └─── /lib/schemas/ (Validation schemas)
+│
+└─── DATABASE & API
+     ├─── /db/ (Supabase clients & types)
+     ├─── /pages/api/ (API endpoints)
+     └─── /middleware/ (Request/response processing)

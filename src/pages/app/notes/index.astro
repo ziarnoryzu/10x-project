@@ -6,7 +6,10 @@ import { requireAuth } from "../../../lib/utils/auth-guard";
 export const prerender = false;
 
 // Require authentication
-requireAuth(Astro);
+const user = requireAuth(Astro);
+if (!user) {
+  return;
+}
 ---
 
 <MainLayout title="Moje notatki">
