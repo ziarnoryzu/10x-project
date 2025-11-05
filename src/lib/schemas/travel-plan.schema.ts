@@ -22,12 +22,13 @@ export const ActivitySchema = z.object({
 /**
  * Schema for activities organized by time of day.
  * Groups activities into morning, afternoon, and evening slots.
- * All fields default to empty arrays if not provided by the AI.
+ * All fields are optional to support partial days (e.g., arrival in the evening, departure in the morning).
+ * At least one time period should have activities, but this is not enforced at schema level.
  */
 export const DayActivitiesSchema = z.object({
-  morning: z.array(ActivitySchema).default([]).describe("Aktywności zaplanowane na poranek."),
-  afternoon: z.array(ActivitySchema).default([]).describe("Aktywności zaplanowane na popołudnie."),
-  evening: z.array(ActivitySchema).default([]).describe("Aktywności zaplanowane na wieczór."),
+  morning: z.array(ActivitySchema).optional().describe("Aktywności zaplanowane na poranek (opcjonalne)."),
+  afternoon: z.array(ActivitySchema).optional().describe("Aktywności zaplanowane na popołudnie (opcjonalne)."),
+  evening: z.array(ActivitySchema).optional().describe("Aktywności zaplanowane na wieczór (opcjonalne)."),
 });
 
 /**

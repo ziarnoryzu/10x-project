@@ -76,20 +76,26 @@ export function useGeneratePlan(
 
       // Validate each day structure
       for (const day of parsed.days) {
-        if (
-          typeof day.day !== "number" ||
-          typeof day.title !== "string" ||
-          !day.activities ||
-          !Array.isArray(day.activities.morning) ||
-          !Array.isArray(day.activities.afternoon) ||
-          !Array.isArray(day.activities.evening)
-        ) {
+        if (typeof day.day !== "number" || typeof day.title !== "string" || !day.activities) {
           throw new Error("Invalid day structure in plan");
+        }
+
+        // Validate activities structure - fields are optional (for partial days)
+        // but if present, must be arrays
+        const { morning, afternoon, evening } = day.activities;
+        if (morning !== undefined && !Array.isArray(morning)) {
+          throw new Error("Invalid morning activities in plan");
+        }
+        if (afternoon !== undefined && !Array.isArray(afternoon)) {
+          throw new Error("Invalid afternoon activities in plan");
+        }
+        if (evening !== undefined && !Array.isArray(evening)) {
+          throw new Error("Invalid evening activities in plan");
         }
       }
 
       return parsed as TravelPlanContent;
-    } catch (err) {
+    } catch {
       throw new Error("Otrzymano plan w nieprawidłowym formacie");
     }
   };

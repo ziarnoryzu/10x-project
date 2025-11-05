@@ -8,42 +8,47 @@ interface GeneratedPlanViewProps {
 }
 
 /**
+ * Translate price category from English (used by AI) to Polish (displayed to user).
+ */
+function translatePriceCategory(category: string): string {
+  const lowerCategory = category.toLowerCase();
+
+  switch (lowerCategory) {
+    case "free":
+      return "Bezpłatne";
+    case "budget":
+      return "Ekonomiczne";
+    case "moderate":
+      return "Umiarkowane";
+    case "expensive":
+      return "Drogie";
+    default:
+      return category; // Fallback to original if unknown
+  }
+}
+
+/**
  * Get color classes for price category badge based on price range.
  */
 function getPriceCategoryColor(category: string): string {
   const lowerCategory = category.toLowerCase();
 
   // Free activities
-  if (lowerCategory.includes("bezpłatne") || lowerCategory.includes("free")) {
+  if (lowerCategory === "free") {
     return "bg-green-100 text-green-700 border border-green-200";
   }
 
-  // Luxury/Premium activities (high prices or luxury keywords)
-  if (
-    lowerCategory.includes("luksus") ||
-    lowerCategory.includes("luxury") ||
-    lowerCategory.includes("premium") ||
-    lowerCategory.includes("150") ||
-    lowerCategory.includes("200") ||
-    lowerCategory.includes("100-150") ||
-    lowerCategory.includes("80-120")
-  ) {
+  // Expensive/Luxury activities
+  if (lowerCategory === "expensive") {
     return "bg-purple-100 text-purple-700 border border-purple-200";
   }
 
-  // Economy/Budget activities (low prices)
-  if (
-    lowerCategory.includes("ekonomi") ||
-    lowerCategory.includes("economy") ||
-    lowerCategory.includes("5-10") ||
-    lowerCategory.includes("10-20") ||
-    lowerCategory.includes("15-25") ||
-    lowerCategory.includes("ulgowy")
-  ) {
+  // Budget/Economy activities
+  if (lowerCategory === "budget") {
     return "bg-blue-100 text-blue-700 border border-blue-200";
   }
 
-  // Standard/Mid-range (default)
+  // Moderate/Standard (default)
   return "bg-amber-100 text-amber-700 border border-amber-200";
 }
 
@@ -58,7 +63,7 @@ function ActivityCard({ activity }: { activity: PlanActivity }) {
         <span
           className={`text-xs px-2 py-1 rounded-full whitespace-nowrap font-medium ${getPriceCategoryColor(activity.priceCategory)}`}
         >
-          {activity.priceCategory}
+          {translatePriceCategory(activity.priceCategory)}
         </span>
       </div>
 
@@ -127,9 +132,11 @@ function ActivityCard({ activity }: { activity: PlanActivity }) {
 
 /**
  * TimeSection displays activities for a specific time of day.
+ * Handles optional activities arrays (for partial days like arrival/departure).
  */
-function TimeSection({ title, activities }: { title: string; activities: PlanActivity[] }) {
-  if (activities.length === 0) return null;
+function TimeSection({ title, activities }: { title: string; activities?: PlanActivity[] }) {
+  // Don't render if no activities for this time of day
+  if (!activities || activities.length === 0) return null;
 
   return (
     <div className="space-y-3">
@@ -149,57 +156,60 @@ function TimeSection({ title, activities }: { title: string; activities: PlanAct
  */
 export function GeneratedPlanView({ plan, onSave }: GeneratedPlanViewProps) {
   return (
-    <div className="space-y-6">
-      {/* Success message */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
-            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+    <div className="flex flex-col h-full min-h-0">
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto min-h-0 pr-2 space-y-6">
+        {/* Success message */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-green-900 mb-1">Plan podróży został wygenerowany!</h3>
+              <p className="text-sm text-green-700">
+                Poniżej znajdziesz szczegółowy plan podróży. Możesz go zapisać, aby mieć do niego dostęp później.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-green-900 mb-1">Plan podróży został wygenerowany!</h3>
-            <p className="text-sm text-green-700">
-              Poniżej znajdziesz szczegółowy plan podróży. Możesz go zapisać, aby mieć do niego dostęp później.
-            </p>
-          </div>
+        </div>
+
+        {/* Plan content */}
+        <div className="space-y-8">
+          {plan.content.days.map((day) => (
+            <div key={day.day} className="border border-gray-200 rounded-lg p-6 space-y-6">
+              {/* Day header */}
+              <div className="pb-4 border-b border-gray-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-bold">
+                    {day.day}
+                  </span>
+                  <h3 className="text-xl font-bold text-gray-900">{day.title}</h3>
+                </div>
+              </div>
+
+              {/* Activities by time of day */}
+              <div className="space-y-6">
+                <TimeSection title="Ranek" activities={day.activities.morning} />
+                <TimeSection title="Popołudnie" activities={day.activities.afternoon} />
+                <TimeSection title="Wieczór" activities={day.activities.evening} />
+              </div>
+            </div>
+          ))}
+
+          {/* Disclaimer */}
+          {plan.content.disclaimer && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-xs text-gray-600 leading-relaxed">{plan.content.disclaimer}</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Plan content */}
-      <div className="space-y-8 max-h-[60vh] overflow-y-auto pr-2">
-        {plan.content.days.map((day) => (
-          <div key={day.day} className="border border-gray-200 rounded-lg p-6 space-y-6">
-            {/* Day header */}
-            <div className="pb-4 border-b border-gray-200">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-bold">
-                  {day.day}
-                </span>
-                <h3 className="text-xl font-bold text-gray-900">{day.title}</h3>
-              </div>
-            </div>
-
-            {/* Activities by time of day */}
-            <div className="space-y-6">
-              <TimeSection title="Ranek" activities={day.activities.morning} />
-              <TimeSection title="Popołudnie" activities={day.activities.afternoon} />
-              <TimeSection title="Wieczór" activities={day.activities.evening} />
-            </div>
-          </div>
-        ))}
-
-        {/* Disclaimer */}
-        {plan.content.disclaimer && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <p className="text-xs text-gray-600 leading-relaxed">{plan.content.disclaimer}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Save button */}
-      <div className="pt-4 border-t border-gray-200">
+      {/* Fixed save button at bottom */}
+      <div className="flex-shrink-0 pt-4 mt-4 border-t border-gray-200 bg-white">
         <Button onClick={onSave} className="w-full" size="lg">
           Zapisz do moich podróży
         </Button>

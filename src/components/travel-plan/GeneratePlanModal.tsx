@@ -1,5 +1,5 @@
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useGeneratePlan } from "@/components/hooks/useGeneratePlan";
 import { GenerationOptionsForm } from "./GenerationOptionsForm";
 import { LoadingView } from "./LoadingView";
@@ -72,9 +72,15 @@ export function GeneratePlanModal({ note, isOpen, onOpenChange, onSuccess }: Gen
             {status === "success" && "Twój plan podróży"}
             {status === "error" && "Błąd generowania"}
           </DialogTitle>
+          <DialogDescription>
+            {status === "idle" && "Dostosuj parametry, aby AI wygenerowało spersonalizowany plan podróży."}
+            {status === "loading" && "Proszę czekać, trwa generowanie Twojego planu podróży..."}
+            {status === "success" && "Plan został pomyślnie wygenerowany. Możesz go teraz zapisać."}
+            {status === "error" && "Wystąpił problem podczas generowania planu. Spróbuj ponownie."}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           {/* Idle state: Show options form */}
           {status === "idle" && (
             <GenerationOptionsForm existingPlan={note.travel_plan} isSubmitting={false} onSubmit={handleGenerate} />

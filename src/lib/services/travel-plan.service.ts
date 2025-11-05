@@ -89,6 +89,23 @@ Przykład zbalansowanego planu dla preferencji "włoska kuchnia", "biologia", "g
     }
 
 WAŻNE - Wymagania dotyczące struktury danych: 
+- Pole "activities" dla każdego dnia MUSI być OBIEKTEM z kluczami: "morning", "afternoon", "evening"
+- Każdy z tych kluczy może zawierać TABLICĘ aktywności dla danej pory dnia lub być pominięty (undefined/null)
+- Pory dnia są OPCJONALNE - możesz pominąć "morning" jeśli dzień zaczyna się później, lub pominąć "evening" jeśli kończy się wcześniej
+- Przykład poprawnej struktury dla pełnego dnia:
+  "activities": {
+    "morning": [{ "name": "...", "description": "...", "priceCategory": "moderate", "logistics": {...} }],
+    "afternoon": [{ "name": "...", ... }],
+    "evening": [{ "name": "...", ... }]
+  }
+- Przykład dla dnia rozpoczynającego się wieczorem (np. dzień przyjazdu):
+  "activities": {
+    "evening": [{ "name": "...", ... }]
+  }
+- Przykład dla dnia kończącego się rano (np. dzień wyjazdu):
+  "activities": {
+    "morning": [{ "name": "...", ... }]
+  }
 - Każda aktywność MUSI mieć wypełnione pole priceCategory używając dokładnie jednej z wartości: "free", "budget", "moderate", "expensive"
 - Każda aktywność MUSI zawierać szczegółowy opis (description)
 - Staraj się uwzględnić realne miejsca i atrakcje z notatek użytkownika

@@ -3,6 +3,10 @@
 import { defineMiddleware } from "astro:middleware";
 import { createSupabaseServerInstance } from "../db/supabase.client";
 
+// Get base path from import.meta.env.BASE_URL (set in astro.config.mjs)
+// This will be "/" for local dev and "/10x-project" for GitHub Pages deployment
+const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, ""); // Remove trailing slash
+
 // Public paths - Auth API endpoints & Server-Rendered Astro Pages
 const PUBLIC_PATHS = [
   // Server-Rendered Astro Pages
@@ -45,9 +49,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
     };
   }
 
+  // Normalize pathname - remove base path if exists
+  // This ensures route matching works correctly whether deployed at root or subdirectory
+  const pathname = BASE_PATH ? url.pathname.replace(new RegExp(`^${BASE_PATH}`), "") : url.pathname;
+
   // Redirect to login for protected routes if not authenticated
-  if (!user && !PUBLIC_PATHS.includes(url.pathname)) {
-    return redirect(`/auth/login?redirect=${encodeURIComponent(url.pathname)}`);
+  if (!user && !PUBLIC_PATHS.includes(pathname)) {
+    return redirect(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
   }
 
   return next();

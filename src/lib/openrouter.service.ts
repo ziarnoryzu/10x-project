@@ -192,6 +192,55 @@ export class OpenRouterService {
           throw new InvalidJSONResponseError(rawJson);
         }
 
+        // Clean up the response - remove any incomplete/empty days from the array
+        // This handles cases where models generate arrays with trailing undefined elements
+        if (
+          typeof parsedJson === "object" &&
+          parsedJson !== null &&
+          "days" in parsedJson &&
+          Array.isArray((parsedJson as { days: unknown }).days)
+        ) {
+          const cleaned = parsedJson as { days: unknown[]; disclaimer?: string };
+
+          // Extract disclaimer if it's mistakenly placed inside the days array
+          const disclaimerIndex = cleaned.days.findIndex(
+            (day) => day !== null && typeof day === "object" && "disclaimer" in day && !("day" in day)
+          );
+
+          if (disclaimerIndex !== -1) {
+            const disclaimerObj = cleaned.days[disclaimerIndex] as { disclaimer: string };
+            cleaned.disclaimer = disclaimerObj.disclaimer;
+            cleaned.days.splice(disclaimerIndex, 1); // Remove from array
+          }
+
+          // Filter and fix days
+          cleaned.days = cleaned.days.filter((day) => {
+            // Filter out null, undefined, or empty objects
+            if (day === null || day === undefined || typeof day !== "object") return false;
+            const dayObj = day as Record<string, unknown>;
+            if (Object.keys(dayObj).length === 0) return false;
+
+            // Skip objects that only have disclaimer (already extracted)
+            if ("disclaimer" in dayObj && !("day" in dayObj)) return false;
+
+            // Fix activities structure if it's an array instead of object
+            // Model sometimes returns activities: [...] instead of activities: { morning: [...], afternoon: [...], evening: [...] }
+            if ("activities" in dayObj && Array.isArray(dayObj.activities)) {
+              // Convert flat array to time-of-day structure
+              // Since we don't know the intended time of day, put all in afternoon as reasonable default
+              dayObj.activities = {
+                afternoon: dayObj.activities,
+              };
+            }
+
+            // Note: We do NOT add empty arrays for missing time periods (morning/afternoon/evening)
+            // The schema now supports optional time periods for partial days (e.g., arrival/departure days)
+
+            return true;
+          });
+          parsedJson = cleaned;
+        }
+
         // Validate against Zod schema
         const validationResult = params.schema.safeParse(parsedJson);
         if (!validationResult.success) {

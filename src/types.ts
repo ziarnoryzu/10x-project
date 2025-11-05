@@ -170,14 +170,15 @@ export interface PlanActivity {
 /**
  * TravelDay represents a single day in the travel itinerary.
  * Activities are organized by time of day (morning, afternoon, evening).
+ * Time periods are optional to support partial days (e.g., arrival in evening, departure in morning).
  */
 export interface TravelDay {
   day: number;
   title: string;
   activities: {
-    morning: PlanActivity[];
-    afternoon: PlanActivity[];
-    evening: PlanActivity[];
+    morning?: PlanActivity[];
+    afternoon?: PlanActivity[];
+    evening?: PlanActivity[];
   };
 }
 

@@ -5,38 +5,47 @@ interface TravelPlanViewProps {
 }
 
 /**
+ * Translate price category from English (used by AI) to Polish (displayed to user).
+ */
+function translatePriceCategory(category: string): string {
+  const lowerCategory = category.toLowerCase();
+
+  switch (lowerCategory) {
+    case "free":
+      return "Bezpłatne";
+    case "budget":
+      return "Ekonomiczne";
+    case "moderate":
+      return "Umiarkowane";
+    case "expensive":
+      return "Drogie";
+    default:
+      return category; // Fallback to original if unknown
+  }
+}
+
+/**
  * Get color classes for price category badge based on price range.
  */
 function getPriceCategoryColor(category: string): string {
   const lowerCategory = category.toLowerCase();
 
-  if (lowerCategory.includes("bezpłatne") || lowerCategory.includes("free")) {
+  // Free activities
+  if (lowerCategory === "free") {
     return "bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800";
   }
 
-  if (
-    lowerCategory.includes("luksus") ||
-    lowerCategory.includes("luxury") ||
-    lowerCategory.includes("premium") ||
-    lowerCategory.includes("150") ||
-    lowerCategory.includes("200") ||
-    lowerCategory.includes("100-150") ||
-    lowerCategory.includes("80-120")
-  ) {
+  // Expensive/Luxury activities
+  if (lowerCategory === "expensive") {
     return "bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800";
   }
 
-  if (
-    lowerCategory.includes("ekonomi") ||
-    lowerCategory.includes("economy") ||
-    lowerCategory.includes("5-10") ||
-    lowerCategory.includes("10-20") ||
-    lowerCategory.includes("15-25") ||
-    lowerCategory.includes("ulgowy")
-  ) {
+  // Budget/Economy activities
+  if (lowerCategory === "budget") {
     return "bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800";
   }
 
+  // Moderate/Standard (default)
   return "bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800";
 }
 
@@ -53,7 +62,7 @@ function ActivityCard({ activity }: { activity: PlanActivity }) {
             activity.priceCategory
           )}`}
         >
-          {activity.priceCategory}
+          {translatePriceCategory(activity.priceCategory)}
         </span>
       </div>
 
@@ -122,9 +131,11 @@ function ActivityCard({ activity }: { activity: PlanActivity }) {
 
 /**
  * TimeSection displays activities for a specific time of day.
+ * Handles optional activities arrays (for partial days like arrival/departure).
  */
-function TimeSection({ title, activities }: { title: string; activities: PlanActivity[] }) {
-  if (activities.length === 0) return null;
+function TimeSection({ title, activities }: { title: string; activities?: PlanActivity[] }) {
+  // Don't render if no activities for this time of day
+  if (!activities || activities.length === 0) return null;
 
   return (
     <div className="space-y-3">
