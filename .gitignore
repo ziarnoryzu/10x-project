@@ -22,3 +22,11 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Test directories
+test-results/
+playwright-report/
+coverage/
+
+# Playwright
+*.trace
