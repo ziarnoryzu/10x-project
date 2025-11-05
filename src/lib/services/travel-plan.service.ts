@@ -55,6 +55,36 @@ export class TravelPlanService {
 
 Twoim zadaniem jest przeanalizowanie notatek użytkownika dotyczących podróży i utworzenie kompleksowego planu wycieczki.
 
+WAŻNE - Wymagania dotyczące dat i numeracji dni:
+- Jeśli notatka zawiera konkretne daty podróży (np. "od 15 do 18 listopada", "weekend 20-22 grudnia", "5-7 czerwca"):
+  * KONIECZNIE wyodrębnij te daty i przypisz je do poszczególnych dni planu
+  * Wypełnij pole "date" w formacie ISO (YYYY-MM-DD), np. "2025-11-15"
+  * Wypełnij pole "dayOfWeek" po polsku: Poniedziałek, Wtorek, Środa, Czwartek, Piątek, Sobota, Niedziela
+  * Zachowaj również numerację dni (day: 1, 2, 3, ...)
+  
+KRYTYCZNE - Logika wyboru roku (dziś jest ${new Date().toISOString().split("T")[0]}):
+  * Jeśli rok JEST podany w notatce (np. "15 listopada 2025") → użyj tego roku
+  * Jeśli rok NIE JEST podany:
+    - Sprawdź czy data już minęła w bieżącym roku (${new Date().getFullYear()})
+    - Jeśli data jeszcze nie minęła → użyj bieżącego roku (${new Date().getFullYear()})
+    - Jeśli data już minęła → użyj następnego roku (${new Date().getFullYear() + 1})
+  * Przykłady (dziś: 5 listopada 2025):
+    - "15 listopada" → 2025-11-15 (nie minęło w 2025)
+    - "20 grudnia" → 2025-12-20 (nie minęło w 2025)
+    - "5 czerwca" → 2026-06-05 (minęło w 2025, więc następny rok)
+    - "10 stycznia" → 2026-01-10 (minęło w 2025, więc następny rok)
+
+- Jeśli notatka NIE zawiera konkretnych dat lub są nieprecyzyjne (np. "kiedyś w wakacje"):
+  * Pomiń pola "date" i "dayOfWeek" (nie dodawaj ich wcale)
+  * Użyj tylko numeracji dni (day: 1, 2, 3, ...)
+  
+- Przykłady dat w notatkach, które MUSISZ rozpoznać:
+  * "15-18 listopada 2025" → 2025-11-15, 2025-11-16, 2025-11-17, 2025-11-18
+  * "od 15.11 do 18.11" → 2025-11-15 do 2025-11-18 (listopad nie minął)
+  * "weekend 20-22 grudnia" → 2025-12-20, 2025-12-21, 2025-12-22 (grudzień nie minął)
+  * "Przylatuję 5 czerwca, wracam 12 czerwca" → 2026-06-05 do 2026-06-12 (czerwiec minął w 2025)
+  * "3 dni od piątku 10 stycznia" → 2026-01-10, 2026-01-11, 2026-01-12 (styczeń minął w 2025)
+
 Musisz wziąć pod uwagę następujące preferencje użytkownika:
 - Styl: ${style === "adventure" ? "przygodowy (aktywne zwiedzanie, intensywny program)" : "wypoczynkowy (spokojne tempo, relaks)"}
 - Transport: ${transport === "car" ? "samochód" : transport === "public" ? "komunikacja publiczna" : "piesze przemieszczanie się"}

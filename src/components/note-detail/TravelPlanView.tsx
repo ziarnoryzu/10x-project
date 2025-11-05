@@ -1,4 +1,4 @@
-import type { TypedTravelPlan, PlanActivity } from "@/types";
+import type { TypedTravelPlan, PlanActivity, TravelDay } from "@/types";
 
 interface TravelPlanViewProps {
   plan: TypedTravelPlan;
@@ -22,6 +22,25 @@ function translatePriceCategory(category: string): string {
     default:
       return category; // Fallback to original if unknown
   }
+}
+
+/**
+ * Format day header with date and day of week if available.
+ * Falls back to "Dzień X" format if dates are not specified.
+ */
+function formatDayHeader(day: TravelDay): string {
+  if (day.date && day.dayOfWeek) {
+    // Format: "Piątek, 15 listopada 2025"
+    const dateObj = new Date(day.date + "T00:00:00"); // Add time to avoid timezone issues
+    const formatted = dateObj.toLocaleDateString("pl-PL", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    return `${day.dayOfWeek}, ${formatted}`;
+  }
+  // Fallback: "Dzień 1", "Dzień 2", etc.
+  return `Dzień ${day.day}`;
 }
 
 /**
@@ -175,7 +194,12 @@ export function TravelPlanView({ plan }: TravelPlanViewProps) {
                 <span className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-bold">
                   {day.day}
                 </span>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{day.title}</h3>
+                <div className="flex flex-col">
+                  {/* Primary header: date with day of week OR "Dzień X" */}
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{formatDayHeader(day)}</h3>
+                  {/* Secondary: day title */}
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{day.title}</p>
+                </div>
               </div>
             </div>
 

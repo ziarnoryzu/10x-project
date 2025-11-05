@@ -80,6 +80,14 @@ export function useGeneratePlan(
           throw new Error("Invalid day structure in plan");
         }
 
+        // Optional date fields validation
+        if (day.date !== undefined && typeof day.date !== "string") {
+          throw new Error("Invalid date format in plan");
+        }
+        if (day.dayOfWeek !== undefined && typeof day.dayOfWeek !== "string") {
+          throw new Error("Invalid dayOfWeek format in plan");
+        }
+
         // Validate activities structure - fields are optional (for partial days)
         // but if present, must be arrays
         const { morning, afternoon, evening } = day.activities;

@@ -174,6 +174,8 @@ export interface PlanActivity {
  */
 export interface TravelDay {
   day: number;
+  date?: string; // Optional: date in ISO format (YYYY-MM-DD) if specified in note
+  dayOfWeek?: string; // Optional: day of week in Polish (e.g., "Piątek", "Sobota")
   title: string;
   activities: {
     morning?: PlanActivity[];

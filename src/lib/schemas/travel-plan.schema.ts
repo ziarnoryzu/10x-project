@@ -34,9 +34,19 @@ export const DayActivitiesSchema = z.object({
 /**
  * Schema for a single day in the travel itinerary.
  * Contains the day number, title, and activities organized by time of day.
+ * Optionally includes date and day of week if specified in user's note.
  */
 export const TravelDaySchema = z.object({
   day: z.number().int().positive().describe("Numer dnia w planie podróży (zaczynając od 1)."),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .describe("Data w formacie ISO (YYYY-MM-DD), jeśli określona w notatkach użytkownika."),
+  dayOfWeek: z
+    .string()
+    .optional()
+    .describe("Dzień tygodnia po polsku (np. 'Poniedziałek', 'Wtorek'), jeśli data jest znana."),
   title: z.string().describe("Tytuł lub temat dnia (np. 'Zwiedzanie centrum')."),
   activities: DayActivitiesSchema.describe("Aktywności pogrupowane według pory dnia."),
 });
