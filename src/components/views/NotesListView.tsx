@@ -133,7 +133,12 @@ export function NotesListView() {
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
           <h1 className="text-2xl font-bold sm:text-3xl">Moje notatki</h1>
-          <Button onClick={handleCreateNote} disabled={isCreating} className="w-full sm:w-auto">
+          <Button
+            onClick={handleCreateNote}
+            disabled={isCreating}
+            className="w-full sm:w-auto"
+            data-test-id="create-note-button"
+          >
             {isCreating ? "Tworzenie..." : "Nowa notatka"}
           </Button>
         </div>
@@ -153,7 +158,12 @@ export function NotesListView() {
       <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
           <h1 className="text-2xl font-bold sm:text-3xl">Moje notatki</h1>
-          <Button onClick={handleCreateNote} disabled={isCreating} className="w-full sm:w-auto">
+          <Button
+            onClick={handleCreateNote}
+            disabled={isCreating}
+            className="w-full sm:w-auto"
+            data-test-id="create-note-button"
+          >
             {isCreating ? "Tworzenie..." : "Nowa notatka"}
           </Button>
         </div>
@@ -168,7 +178,12 @@ export function NotesListView() {
       {/* Header with title and create button */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
         <h1 className="text-2xl font-bold sm:text-3xl">Moje notatki</h1>
-        <Button onClick={handleCreateNote} disabled={isCreating} className="w-full sm:w-auto">
+        <Button
+          onClick={handleCreateNote}
+          disabled={isCreating}
+          className="w-full sm:w-auto"
+          data-test-id="create-note-button"
+        >
           {isCreating ? "Tworzenie..." : "Nowa notatka"}
         </Button>
       </div>

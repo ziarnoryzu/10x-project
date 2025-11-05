@@ -1,0 +1,31 @@
+NotesListView
+├── useNotesList (hook)
+│   └── currentPage state
+│
+├── [Loading State]
+│   └── NotesListSkeleton
+│       ├── Skeleton (UI component)
+│       ├── Skeleton
+│       └── Skeleton (×5)
+│
+├── [Error State]
+│   └── Button
+│
+├── [Empty State]
+│   └── EmptyState
+│       └── Button
+│
+└── [List View with Data]
+    ├── Button ("Nowa notatka")
+    │
+    ├── OnboardingBanner (conditional: pagination.total < 2)
+    │   └── <a> link to /app/profile
+    │
+    ├── NotesList
+    │   └── NoteListItem (×N notes)
+    │       └── [interactive div with onClick]
+    │
+    └── Pagination (conditional: totalPages > 1)
+        ├── Button ("Poprzednia")
+        ├── <span> (page info)
+        └── Button ("Następna")

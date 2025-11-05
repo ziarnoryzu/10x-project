@@ -32,7 +32,13 @@ export const EmptyState = memo(function EmptyState({ onCreateNote, isCreating = 
       <p className="mb-6 text-sm text-gray-600 sm:text-base">
         Stwórz swoją pierwszą notatkę podróży, aby rozpocząć planowanie
       </p>
-      <Button onClick={onCreateNote} disabled={isCreating} size="lg" className="w-full sm:w-auto">
+      <Button
+        onClick={onCreateNote}
+        disabled={isCreating}
+        size="lg"
+        className="w-full sm:w-auto"
+        data-test-id="create-first-note-button"
+      >
         {isCreating ? "Tworzenie..." : "Stwórz pierwszą notatkę"}
       </Button>
     </div>

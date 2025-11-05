@@ -196,6 +196,7 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
             onClick={() => navigate(returnUrl)}
             className="mb-2"
             aria-label="Powrót do listy notatek"
+            data-test-id="back-to-list-button"
           >
             ← Powrót do listy notatek
           </Button>

@@ -62,6 +62,7 @@ describe("MyComponent", () => {
 - Configuration file: `playwright.config.ts`
 - Test directory: `e2e/`
 - Browser: Chromium (Desktop Chrome)
+- Database: Cloud Supabase (with automatic cleanup)
 
 ### Running Tests
 
@@ -78,6 +79,34 @@ npm run test:e2e:debug
 # Generate tests with codegen
 npm run test:e2e:codegen
 ```
+
+### Test Data Cleanup
+
+E2E tests use cloud Supabase database with automatic cleanup mechanism:
+
+```typescript
+import { test } from "./fixtures/testContext";
+import { extractNoteIdFromUrl } from "./helpers/cleanupHelper";
+
+test("should create note", async ({ authenticatedPage, createdNoteIds }) => {
+  const page = authenticatedPage; // Auto-authenticated
+  
+  // ... create note ...
+  
+  // Track note ID for cleanup
+  const noteId = await extractNoteIdFromUrl(page);
+  if (noteId) {
+    createdNoteIds.push(noteId);
+  }
+  // Notes are automatically deleted after test completes
+});
+```
+
+**Available Fixtures:**
+- `authenticatedPage` - Pre-authenticated page with user login
+- `createdNoteIds` - Array for tracking created notes (auto-cleanup)
+
+See [e2e/README.md](e2e/README.md) for detailed documentation.
 
 ### Writing E2E Tests
 

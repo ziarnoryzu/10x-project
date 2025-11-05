@@ -39,6 +39,7 @@ export function NoteEditor({ note, wordCount, onNoteChange }: NoteEditorProps) {
           onChange={handleTitleChange}
           placeholder="Wprowadź tytuł notatki..."
           className="text-lg"
+          data-test-id="note-title-input"
         />
       </div>
 
@@ -56,6 +57,7 @@ export function NoteEditor({ note, wordCount, onNoteChange }: NoteEditorProps) {
           onChange={handleContentChange}
           placeholder="Wprowadź treść notatki..."
           className="min-h-[400px] resize-y"
+          data-test-id="note-content-textarea"
         />
 
         {/* Word count and status */}

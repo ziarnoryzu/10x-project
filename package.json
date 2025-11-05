@@ -12,10 +12,7 @@
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug",
-    "test:e2e:codegen": "playwright codegen"
+    "dev:e2e": "astro dev --mode test"
   },
   "dependencies": {
     "@astrojs/node": "^9.4.6",
@@ -60,6 +57,7 @@
     "@vitejs/plugin-react": "^5.1.0",
     "@vitest/coverage-v8": "^4.0.7",
     "@vitest/ui": "^4.0.7",
+    "dotenv": "^17.2.3",
     "eslint": "9.23.0",
     "eslint-config-prettier": "10.1.1",
     "eslint-import-resolver-typescript": "4.2.5",
