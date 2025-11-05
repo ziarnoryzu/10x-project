@@ -26,6 +26,9 @@ The project uses a modern, scalable, and efficient technology stack chosen for r
 -   **AI Integration**: [OpenRouter.ai](https://openrouter.ai/)
 -   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 -   **UI Components**: [Shadcn/ui](https://ui.shadcn.com/)
+-   **Testing**: 
+    -   **Unit & Integration Tests**: [Vitest](https://vitest.dev/), [React Testing Library](https://testing-library.com/react)
+    -   **E2E Tests**: [Playwright](https://playwright.dev/)
 -   **Deployment**: [DigitalOcean](https://www.digitalocean.com/)
 
 ## 🚀 Getting Started Locally
