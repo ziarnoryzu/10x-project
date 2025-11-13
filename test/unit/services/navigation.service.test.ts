@@ -527,7 +527,7 @@ describe("Navigation Service", () => {
         const route = Routes.profile();
 
         // Assert
-        expect(route).toBe("/profile");
+        expect(route).toBe("/app/profile");
       });
 
       it("should build home route", () => {

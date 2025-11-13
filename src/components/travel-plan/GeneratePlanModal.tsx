@@ -5,10 +5,12 @@ import { GenerationOptionsForm } from "./GenerationOptionsForm";
 import { LoadingView } from "./LoadingView";
 import { GeneratedPlanView } from "./GeneratedPlanView";
 import { ErrorView } from "./ErrorView";
-import type { NoteWithPlan, GenerationOptions } from "@/types";
+import type { TravelPlanDTO, TypedTravelPlan, GenerationOptions } from "@/types";
+import type { Json } from "@/db/database.types";
 
 interface GeneratePlanModalProps {
-  note: NoteWithPlan;
+  noteId: string;
+  existingPlan: TravelPlanDTO | TypedTravelPlan | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSuccess: () => void;
@@ -19,12 +21,21 @@ interface GeneratePlanModalProps {
  * Manages the complete flow from options selection through generation to saving.
  * Uses Shadcn Dialog component with conditional rendering based on generation state.
  */
-export function GeneratePlanModal({ note, isOpen, onOpenChange, onSuccess }: GeneratePlanModalProps) {
-  const { status, generatedPlan, error, generatePlan, savePlan, reset } = useGeneratePlan(
-    note.id,
-    note.travel_plan,
-    onSuccess
-  );
+export function GeneratePlanModal({ noteId, existingPlan, isOpen, onOpenChange, onSuccess }: GeneratePlanModalProps) {
+  // Handle both TravelPlanDTO and TypedTravelPlan
+  // TypedTravelPlan has content: TravelPlanContent, but useGeneratePlan expects TravelPlanDTO with content: Json
+  // We can safely pass it as the hook will handle the conversion internally
+  const planDTO: TravelPlanDTO | null = existingPlan
+    ? ({
+        id: existingPlan.id,
+        note_id: existingPlan.note_id,
+        content: existingPlan.content as Json,
+        created_at: existingPlan.created_at,
+        updated_at: existingPlan.updated_at,
+      } as TravelPlanDTO)
+    : null;
+
+  const { status, generatedPlan, error, generatePlan, savePlan, reset } = useGeneratePlan(noteId, planDTO, onSuccess);
 
   const handleGenerate = async (options: GenerationOptions) => {
     try {
@@ -83,7 +94,7 @@ export function GeneratePlanModal({ note, isOpen, onOpenChange, onSuccess }: Gen
         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           {/* Idle state: Show options form */}
           {status === "idle" && (
-            <GenerationOptionsForm existingPlan={note.travel_plan} isSubmitting={false} onSubmit={handleGenerate} />
+            <GenerationOptionsForm existingPlan={planDTO} isSubmitting={false} onSubmit={handleGenerate} />
           )}
 
           {/* Loading state: Show spinner */}

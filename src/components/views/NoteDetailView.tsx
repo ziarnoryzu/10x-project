@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNoteDetail } from "@/components/hooks/useNoteDetail";
-import { useNoteWithPlan } from "@/components/hooks/useNoteWithPlan";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,8 +38,6 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
     refetchPlan,
   } = useNoteDetail(noteId);
 
-  // Still need noteWithPlan for GeneratePlanModal
-  const { note: noteWithPlan, refetch: refetchNoteWithPlan } = useNoteWithPlan(noteId);
   const [showGeneratePlanModal, setShowGeneratePlanModal] = useState(false);
 
   // Get return URL using navigation service
@@ -172,9 +169,8 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
 
   // Handle successful plan generation
   const handlePlanGenerationSuccess = () => {
-    // Refetch plan in both hooks
+    // Refetch plan
     refetchPlan();
-    refetchNoteWithPlan();
     toast.success("Plan podróży został zapisany");
   };
 
@@ -252,9 +248,10 @@ export default function NoteDetailView({ noteId }: NoteDetailViewProps) {
       </Dialog>
 
       {/* Generate plan modal */}
-      {noteWithPlan && (
+      {note && (
         <GeneratePlanModal
-          note={noteWithPlan}
+          noteId={noteId}
+          existingPlan={note.travelPlan}
           isOpen={showGeneratePlanModal}
           onOpenChange={setShowGeneratePlanModal}
           onSuccess={handlePlanGenerationSuccess}
