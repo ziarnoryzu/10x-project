@@ -8,7 +8,7 @@ import { useLockBodyScroll } from "@/components/hooks/use-lock-body-scroll";
 
 const navItems: NavItem[] = [
   { href: "/app/notes", label: "Notatki" },
-  { href: "/profile", label: "Profil" },
+  { href: "/app/profile", label: "Profil" },
 ];
 
 export function MobileNav({ activePath }: NavComponentProps) {

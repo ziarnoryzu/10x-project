@@ -108,18 +108,22 @@ export function useNoteDetail(noteId: string): UseNoteDetailReturn {
 
       // Fetch travel plan (may not exist)
       let travelPlan: TypedTravelPlan | null = null;
-      const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
+      try {
+        const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
 
-      // 404 is expected when plan doesn't exist yet - don't treat as error
-      if (planResponse.ok) {
-        const planData: TravelPlanDTO = await planResponse.json();
-        travelPlan = {
-          ...planData,
-          content: planData.content as unknown as TravelPlanContent,
-        };
+        // 404 is expected when plan doesn't exist yet - don't treat as error
+        if (planResponse.ok) {
+          const planData: TravelPlanDTO = await planResponse.json();
+          travelPlan = {
+            ...planData,
+            content: planData.content as unknown as TravelPlanContent,
+          };
+        }
+      } catch {
+        // Silently ignore plan fetch errors - plan is optional
       }
 
       // Calculate computed properties

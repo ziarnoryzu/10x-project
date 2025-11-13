@@ -4,7 +4,7 @@ import { NavLink } from "./NavLink";
 
 const navItems: NavItem[] = [
   { href: "/app/notes", label: "Notatki" },
-  { href: "/profile", label: "Profil" },
+  { href: "/app/profile", label: "Profil" },
 ];
 
 export function Sidebar({ activePath }: NavComponentProps) {

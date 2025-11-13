@@ -38,11 +38,16 @@ export function useNoteWithPlan(noteId: string): UseNoteWithPlanReturn {
 
       // Try to fetch travel plan (it may not exist)
       let travelPlan = null;
-      const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`);
+      try {
+        const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`);
 
-      // Only parse travel plan if it exists (200 status)
-      if (planResponse.ok) {
-        travelPlan = await planResponse.json();
+        // Only parse travel plan if it exists (200 status)
+        if (planResponse.ok) {
+          travelPlan = await planResponse.json();
+        }
+        // 404 is expected when plan doesn't exist yet - not an error
+      } catch {
+        // Silently ignore plan fetch errors - plan is optional
       }
 
       // Combine note and travel plan

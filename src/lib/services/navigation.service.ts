@@ -65,6 +65,6 @@ export const Routes = {
     login: () => "/auth/login",
     signup: () => "/auth/signup",
   },
-  profile: () => "/profile",
+  profile: () => "/app/profile",
   home: () => "/",
 } as const;

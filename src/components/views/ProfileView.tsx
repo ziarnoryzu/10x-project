@@ -4,16 +4,16 @@ import { useProfile } from "../hooks/useProfile";
 import { Skeleton } from "../ui/skeleton";
 import { ProfileForm } from "../profile/ProfileForm";
 import { PasswordChangeForm } from "../profile/PasswordChangeForm";
-import { PreferencesManager } from "../profile/PreferencesManager";
+import { TravelPreferencesForm } from "../profile/TravelPreferencesForm";
 import { DeleteAccountSection } from "../profile/DeleteAccountSection";
-import type { UpdateUserProfileDTO, ChangePasswordDTO } from "@/types";
+import type { ChangePasswordDTO } from "@/types";
 
 /**
  * ProfileView - Main component for user profile management
  * Manages all profile sections: personal data, security, preferences, and account deletion
  */
 export function ProfileView() {
-  const { profile, isLoading, isSaving, error, updateProfile, changePassword, deleteAccount } = useProfile();
+  const { profile, isLoading, isSaving, error, changePassword, deleteAccount } = useProfile();
 
   // Show toast notification when there's an error
   useEffect(() => {
@@ -58,13 +58,6 @@ export function ProfileView() {
       </div>
     );
   }
-
-  // Handler for updating preferences
-  const handleUpdatePreferences = async (preferences: string[]) => {
-    const data: UpdateUserProfileDTO = { preferences };
-    await updateProfile(data);
-    toast.success("Preferencje zapisane");
-  };
 
   // Handler for changing password
   const handleChangePassword = async (data: ChangePasswordDTO) => {
@@ -114,11 +107,7 @@ export function ProfileView() {
               Dodaj swoje preferencje podróży, aby uzyskać bardziej spersonalizowane plany
             </p>
           </div>
-          <PreferencesManager
-            initialPreferences={profile.preferences}
-            onUpdate={handleUpdatePreferences}
-            isSaving={isSaving}
-          />
+          <TravelPreferencesForm initialPreferences={profile.preferences} />
         </section>
 
         {/* Section 4: Account Management */}
