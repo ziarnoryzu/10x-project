@@ -1,13 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import type {
-  NoteWithPlanViewModel,
-  AutosaveStatusViewModel,
-  UpdateNoteDTO,
-  NoteDTO,
-  TravelPlanDTO,
-  TypedTravelPlan,
-  TravelPlanContent,
-} from "@/types";
+import { useEffect } from "react";
+import type { NoteWithPlanViewModel, AutosaveStatusViewModel, UpdateNoteDTO } from "@/types";
+import { useNoteFetch } from "./useNoteFetch";
+import { useNoteAutosave } from "./useNoteAutosave";
+import { useNoteActions } from "./useNoteActions";
 
 interface UseNoteDetailReturn {
   note: NoteWithPlanViewModel | null;
@@ -25,317 +20,48 @@ interface UseNoteDetailReturn {
 }
 
 /**
- * Format relative time from a date string
- */
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMinutes < 1) return "przed chwilą";
-  if (diffMinutes === 1) return "minutę temu";
-  if (diffMinutes < 60) return `${diffMinutes} minut temu`;
-  if (diffHours === 1) return "godzinę temu";
-  if (diffHours < 24) return `${diffHours} godzin temu`;
-  if (diffDays === 1) return "wczoraj";
-  if (diffDays < 7) return `${diffDays} dni temu`;
-
-  return date.toLocaleDateString("pl-PL");
-}
-
-/**
- * Count words in text content
- */
-function countWords(content: string | null): number {
-  if (!content) return 0;
-  return content
-    .trim()
-    .split(/\s+/)
-    .filter((word) => word.length > 0).length;
-}
-
-/**
  * Custom hook for managing note detail view state and operations.
  * Handles note fetching, autosave, actions (delete, copy), and plan management.
+ *
+ * This hook composes three specialized hooks:
+ * - useNoteFetch: handles data fetching and plan refetching
+ * - useNoteAutosave: handles autosave with debouncing
+ * - useNoteActions: handles delete and copy operations
  */
 export function useNoteDetail(noteId: string): UseNoteDetailReturn {
-  // Main state
-  const [note, setNote] = useState<NoteWithPlanViewModel | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatusViewModel>("idle");
+  // Fetch note and travel plan
+  const { note, isLoading, error: fetchError, refetchPlan, setNote } = useNoteFetch(noteId);
 
-  // Action states
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
+  // Autosave functionality
+  const {
+    autosaveStatus,
+    error: autosaveError,
+    updateNote,
+    setError: setAutosaveError,
+  } = useNoteAutosave({ noteId, setNote });
 
-  // Modal states
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // Note actions (delete, copy)
+  const {
+    isDeleting,
+    isCopying,
+    isDeleteDialogOpen,
+    deleteNote,
+    copyNote,
+    setIsDeleteDialogOpen,
+    error: actionsError,
+    setError: setActionsError,
+  } = useNoteActions(noteId);
 
-  // Refs
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedRef = useRef<string>("");
-  const pendingChangesRef = useRef<UpdateNoteDTO>({});
+  // Merge errors from different hooks
+  const error = fetchError || autosaveError || actionsError;
 
-  /**
-   * Fetch note and travel plan data
-   */
-  const fetchNoteData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    // Track start time to ensure minimum loading state display
-    const startTime = Date.now();
-
-    try {
-      // Fetch note
-      const noteResponse = await fetch(`/api/notes/${noteId}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!noteResponse.ok) {
-        if (noteResponse.status === 404) {
-          throw new Error("Note not found");
-        }
-        throw new Error("Failed to fetch note");
-      }
-
-      const noteData: NoteDTO = await noteResponse.json();
-
-      // Fetch travel plan (may not exist)
-      let travelPlan: TypedTravelPlan | null = null;
-      try {
-        const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        // 404 is expected when plan doesn't exist yet - don't treat as error
-        if (planResponse.ok) {
-          const planData: TravelPlanDTO = await planResponse.json();
-          travelPlan = {
-            ...planData,
-            content: planData.content as unknown as TravelPlanContent,
-          };
-        }
-      } catch {
-        // Silently ignore plan fetch errors - plan is optional
-      }
-
-      // Calculate computed properties
-      const wordCount = countWords(noteData.content);
-      const isReadyForPlanGeneration = wordCount >= 10;
-
-      // Build view model
-      const viewModel: NoteWithPlanViewModel = {
-        id: noteData.id,
-        title: noteData.title,
-        content: noteData.content,
-        createdAt: formatRelativeTime(noteData.created_at),
-        updatedAt: formatRelativeTime(noteData.updated_at),
-        travelPlan,
-        wordCount,
-        isReadyForPlanGeneration,
-      };
-
-      // Ensure minimum loading time (300ms) for smooth UX with View Transitions
-      const elapsed = Date.now() - startTime;
-      const minLoadingTime = 300;
-      if (elapsed < minLoadingTime) {
-        await new Promise((resolve) => setTimeout(resolve, minLoadingTime - elapsed));
-      }
-
-      setNote(viewModel);
-      lastSavedRef.current = noteData.updated_at;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [noteId]);
-
-  /**
-   * Refetch only the travel plan (after generation)
-   */
-  const refetchPlan = useCallback(async () => {
-    if (!note) return;
-
-    const planResponse = await fetch(`/api/notes/${noteId}/travel-plan`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    // 404 is expected when plan doesn't exist yet - don't treat as error
-    let travelPlan: TypedTravelPlan | null = null;
-    if (planResponse.ok) {
-      const planData: TravelPlanDTO = await planResponse.json();
-      travelPlan = {
-        ...planData,
-        content: planData.content as unknown as TravelPlanContent,
-      };
-    }
-
-    setNote((prev) => (prev ? { ...prev, travelPlan } : null));
-  }, [noteId, note]);
-
-  /**
-   * Update note with debounced autosave
-   * Accumulates changes when multiple edits happen in quick succession
-   */
-  const updateNote = useCallback(
-    async (changes: UpdateNoteDTO) => {
-      // Accumulate changes in ref (merge with pending changes)
-      pendingChangesRef.current = {
-        ...pendingChangesRef.current,
-        ...changes,
-      };
-
-      // Optimistic update
-      setNote((prev) => {
-        if (!prev) return null;
-        const updatedContent = changes.content !== undefined ? changes.content : prev.content;
-        const wordCount = countWords(updatedContent);
-        return {
-          ...prev,
-          ...changes,
-          wordCount,
-          isReadyForPlanGeneration: wordCount >= 10,
-        };
-      });
-
-      // Clear pending save timeout (but keep accumulated changes in ref)
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-
-      // Debounced save
-      saveTimeoutRef.current = setTimeout(async () => {
-        // Capture all accumulated changes
-        const changesToSave = { ...pendingChangesRef.current };
-
-        // Clear pending changes since we're saving them now
-        pendingChangesRef.current = {};
-
-        setAutosaveStatus("saving");
-        setError(null);
-
-        try {
-          const response = await fetch(`/api/notes/${noteId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(changesToSave),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to update note");
-          }
-
-          const updatedNote: NoteDTO = await response.json();
-          lastSavedRef.current = updatedNote.updated_at;
-
-          setAutosaveStatus("success");
-
-          // Sync with server response to ensure consistency (preserve travelPlan)
-          setNote((prev) => {
-            if (!prev) return null;
-            const wordCount = countWords(updatedNote.content);
-            return {
-              ...prev,
-              title: updatedNote.title,
-              content: updatedNote.content,
-              updatedAt: formatRelativeTime(updatedNote.updated_at),
-              wordCount,
-              isReadyForPlanGeneration: wordCount >= 10,
-              // Preserve travelPlan as it's not part of the note update
-              travelPlan: prev.travelPlan,
-            };
-          });
-
-          // Reset to idle after showing success
-          setTimeout(() => setAutosaveStatus("idle"), 2000);
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : "Failed to save";
-          setError(errorMessage);
-          setAutosaveStatus("error");
-        }
-      }, 1500); // 1.5 second debounce as per spec
-    },
-    [noteId]
-  );
-
-  /**
-   * Delete note
-   */
-  const deleteNote = useCallback(async (): Promise<boolean> => {
-    setIsDeleting(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/notes/${noteId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete note");
-      }
-
-      return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to delete note";
-      setError(errorMessage);
-      return false;
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [noteId]);
-
-  /**
-   * Copy note
-   */
-  const copyNote = useCallback(async (): Promise<string | null> => {
-    setIsCopying(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/notes/${noteId}/copy`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to copy note");
-      }
-
-      const newNote: NoteDTO = await response.json();
-      return newNote.id;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to copy note";
-      setError(errorMessage);
-      return null;
-    } finally {
-      setIsCopying(false);
-    }
-  }, [noteId]);
-
-  // Fetch on mount
+  // Sync errors across hooks
   useEffect(() => {
-    fetchNoteData();
-  }, [fetchNoteData]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
+    if (fetchError) {
+      setAutosaveError(fetchError);
+      setActionsError(fetchError);
+    }
+  }, [fetchError, setAutosaveError, setActionsError]);
 
   return {
     note,
