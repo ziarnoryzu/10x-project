@@ -266,6 +266,7 @@ export interface NavLinkProps {
   href: string;
   label: string;
   isActive: boolean;
+  onNavigate?: () => void;
 }
 
 /**

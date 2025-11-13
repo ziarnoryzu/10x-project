@@ -26,18 +26,21 @@ const activePath = Astro.url.pathname;
   <body>
     <div class="flex h-screen flex-col md:grid md:grid-cols-[240px_1fr] md:grid-rows-1">
       <!-- Desktop Sidebar -->
-      <Sidebar client:load activePath={activePath} transition:persist />
+      <Sidebar client:load activePath={activePath} />
 
       <!-- Main content area -->
       <div class="flex min-h-0 flex-1 flex-col">
         <!-- Mobile header -->
-        <header class="flex h-14 items-center border-b px-4 md:hidden" transition:persist>
+        <header class="flex h-14 shrink-0 items-center border-b px-4 md:hidden">
           <MobileNav client:load activePath={activePath} />
           <h1 class="ml-4 text-lg font-semibold">VibeTravels</h1>
         </header>
 
         <!-- Page content -->
-        <main class="flex-1 overflow-auto bg-background">
+        <main
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-background"
+          style="touch-action: pan-y; -webkit-overflow-scrolling: touch;"
+        >
           <slot />
         </main>
       </div>
@@ -46,6 +49,41 @@ const activePath = Astro.url.pathname;
     <Toaster client:load transition:persist="toaster" />
   </body>
 </html>
+
+<script is:inline>
+  // Aggressive cleanup before navigation
+  document.addEventListener("astro:before-preparation", () => {
+    // Force remove overflow:hidden that might be left by Sheet component
+    document.body.style.overflow = "";
+    document.body.style.removeProperty("overflow");
+
+    // Also ensure pointer-events are reset
+    document.body.style.pointerEvents = "";
+    document.body.style.removeProperty("pointer-events");
+
+    // Force close any open dialogs/sheets
+    const escEvent = new KeyboardEvent("keydown", {
+      key: "Escape",
+      code: "Escape",
+      keyCode: 27,
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(escEvent);
+  });
+
+  // Reset scroll position after DOM swap
+  document.addEventListener("astro:after-swap", () => {
+    const main = document.querySelector("main");
+    if (main) {
+      // Reset scroll to top
+      main.scrollTop = 0;
+
+      // Ensure main has correct overflow
+      main.style.overflowY = "auto";
+    }
+  });
+</script>
 
 <style>
   html,

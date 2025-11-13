@@ -57,6 +57,7 @@ export function MobileNav({ activePath }: NavComponentProps) {
                   href={item.href}
                   label={item.label}
                   isActive={activePath.startsWith(item.href)}
+                  onNavigate={() => setIsOpen(false)}
                 />
               ))}
             </ul>

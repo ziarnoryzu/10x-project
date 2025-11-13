@@ -1,11 +1,19 @@
 import type { NavLinkProps } from "@/types";
 import { cn } from "@/lib/utils";
 
-export function NavLink({ href, label, isActive }: NavLinkProps) {
+export function NavLink({ href, label, isActive, onNavigate }: NavLinkProps) {
+  const handleClick = () => {
+    // Call onNavigate callback if provided (to close mobile menu)
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
+
   return (
     <li>
       <a
         href={href}
+        onClick={handleClick}
         aria-current={isActive ? "page" : undefined}
         className={cn(
           "block rounded-lg px-4 py-2 text-sm font-medium transition-colors",
