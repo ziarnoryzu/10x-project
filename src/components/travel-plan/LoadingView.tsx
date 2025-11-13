@@ -1,5 +1,3 @@
-import React from "react";
-
 /**
  * LoadingView component displays a loading state during plan generation.
  * Shows a spinner and informative message to the user.
