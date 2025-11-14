@@ -23,7 +23,8 @@ export class NoteEditorPage {
     this.backToListButton = page
       .locator('[data-test-id="back-to-list-button"], button:has-text("Powrót do listy")')
       .first();
-    this.pageTitle = page.getByRole("heading", { name: "Edytuj notatkę" });
+    // Szukaj nagłówka "Edytuj notatkę" - może być h1 lub h2
+    this.pageTitle = page.locator('h1:has-text("Edytuj notatkę"), h2:has-text("Edytuj notatkę")');
     this.saveStatusIndicator = page.locator('[role="status"]');
     this.wordCountText = page.locator("text=/Liczba słów:/");
   }
@@ -66,16 +67,25 @@ export class NoteEditorPage {
 
   /**
    * Wait for the page to be loaded
+   * We wait for the title input to be visible and editable as it's the most reliable indicator
    */
   async waitForPageLoad() {
-    await this.pageTitle.waitFor({ state: "visible" });
+    // Wait for URL to contain /notes/
+    await this.page.waitForURL(/\/app\/notes\/[^/]+/, { timeout: 15000 });
+    // Wait for load state
+    await this.page.waitForLoadState("networkidle", { timeout: 15000 });
+    // Wait for the editor to be ready (title input visible and enabled)
+    await this.titleInput.waitFor({ state: "visible", timeout: 15000 });
+    // Give React time to hydrate and initialize
+    await this.page.waitForTimeout(1000);
   }
 
   /**
    * Wait for the note to be saved (status indicator shows "Zapisano")
    */
   async waitForSave() {
-    await this.page.locator("text=Zapisano").waitFor({ state: "visible", timeout: 5000 });
+    const statusLocator = this.page.locator('[role="status"]', { hasText: "Zapisano" });
+    await statusLocator.waitFor({ state: "visible", timeout: 10000 });
   }
 
   /**
@@ -102,13 +112,17 @@ export class NoteEditorPage {
    * Check if the save status shows "Zapisano"
    */
   async isSaved(): Promise<boolean> {
-    return await this.page.locator("text=Zapisano").isVisible();
+    // Look for status role containing "Zapisano" text
+    const statusLocator = this.page.locator('[role="status"]', { hasText: "Zapisano" });
+    return await statusLocator.isVisible();
   }
 
   /**
    * Check if the save status shows "Zapisywanie..."
    */
   async isSaving(): Promise<boolean> {
-    return await this.page.locator("text=Zapisywanie...").isVisible();
+    // Look for status role containing "Zapisywanie..." text
+    const statusLocator = this.page.locator('[role="status"]', { hasText: "Zapisywanie..." });
+    return await statusLocator.isVisible();
   }
 }

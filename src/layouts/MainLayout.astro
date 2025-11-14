@@ -2,6 +2,7 @@
 import { ViewTransitions } from "astro:transitions";
 import "../styles/global.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileNav } from "@/components/layout/MobileNav";
 
@@ -24,26 +25,28 @@ const activePath = Astro.url.pathname;
     <ViewTransitions />
   </head>
   <body>
-    <div class="flex h-screen flex-col md:grid md:grid-cols-[240px_1fr] md:grid-rows-1">
-      <!-- Desktop Sidebar -->
-      <Sidebar client:load activePath={activePath} />
+    <ThemeProvider client:load>
+      <div class="flex h-screen flex-col md:grid md:grid-cols-[240px_1fr] md:grid-rows-1">
+        <!-- Desktop Sidebar -->
+        <Sidebar client:load activePath={activePath} />
 
-      <!-- Main content area -->
-      <div class="flex min-h-0 flex-1 flex-col">
-        <!-- Mobile header -->
-        <header class="flex h-14 shrink-0 items-center border-b px-4 md:hidden">
-          <MobileNav client:load activePath={activePath} />
-          <h1 class="ml-4 text-lg font-semibold">VibeTravels</h1>
-        </header>
+        <!-- Main content area -->
+        <div class="flex min-h-0 flex-1 flex-col">
+          <!-- Mobile header -->
+          <header class="flex h-14 shrink-0 items-center border-b px-4 md:hidden">
+            <MobileNav client:load activePath={activePath} />
+            <h1 class="ml-4 text-lg font-semibold">VibeTravels</h1>
+          </header>
 
-        <!-- Page content -->
-        <main class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-background">
-          <slot />
-        </main>
+          <!-- Page content -->
+          <main class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-background">
+            <slot />
+          </main>
+        </div>
       </div>
-    </div>
 
-    <Toaster client:load transition:persist="toaster" />
+      <Toaster client:load transition:persist="toaster" />
+    </ThemeProvider>
   </body>
 </html>
 

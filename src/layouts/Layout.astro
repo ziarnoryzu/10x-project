@@ -2,6 +2,7 @@
 import { ViewTransitions } from "astro:transitions";
 import "../styles/global.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { getLocals } from "@/lib/utils/locals";
 
 interface Props {
@@ -27,43 +28,45 @@ const isAuthenticated = !!user;
     <ViewTransitions />
   </head>
   <body>
-    {
-      showNav && (
-        <header class="border-b">
-          <div class="container mx-auto flex h-16 items-center justify-between px-4">
-            <a href="/" class="text-xl font-bold text-primary">
-              VibeTravels
-            </a>
-            <nav aria-label="Główna nawigacja">
-              {isAuthenticated ? (
-                <div class="flex items-center gap-4">
-                  <a href="/app/notes" class="text-sm font-medium text-foreground hover:text-primary">
-                    Moje podróże
-                  </a>
-                  <a href="/app/profile" class="text-sm font-medium text-foreground hover:text-primary">
-                    Profil
-                  </a>
-                </div>
-              ) : (
-                <div class="flex items-center gap-4">
-                  <a href="/auth/login" class="text-sm font-medium text-foreground hover:text-primary">
-                    Zaloguj się
-                  </a>
-                  <a
-                    href="/auth/register"
-                    class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
-                  >
-                    Zarejestruj się
-                  </a>
-                </div>
-              )}
-            </nav>
-          </div>
-        </header>
-      )
-    }
-    <slot />
-    <Toaster client:load transition:persist="toaster" />
+    <ThemeProvider client:load>
+      {
+        showNav && (
+          <header class="border-b">
+            <div class="container mx-auto flex h-16 items-center justify-between px-4">
+              <a href="/" class="text-xl font-bold text-primary">
+                VibeTravels
+              </a>
+              <nav aria-label="Główna nawigacja">
+                {isAuthenticated ? (
+                  <div class="flex items-center gap-4">
+                    <a href="/app/notes" class="text-sm font-medium text-foreground hover:text-primary">
+                      Moje podróże
+                    </a>
+                    <a href="/app/profile" class="text-sm font-medium text-foreground hover:text-primary">
+                      Profil
+                    </a>
+                  </div>
+                ) : (
+                  <div class="flex items-center gap-4">
+                    <a href="/auth/login" class="text-sm font-medium text-foreground hover:text-primary">
+                      Zaloguj się
+                    </a>
+                    <a
+                      href="/auth/register"
+                      class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
+                    >
+                      Zarejestruj się
+                    </a>
+                  </div>
+                )}
+              </nav>
+            </div>
+          </header>
+        )
+      }
+      <slot />
+      <Toaster client:load transition:persist="toaster" />
+    </ThemeProvider>
   </body>
 </html>
 

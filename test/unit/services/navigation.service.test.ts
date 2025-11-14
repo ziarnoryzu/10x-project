@@ -1,9 +1,255 @@
 // test/unit/services/navigation.service.test.ts
 
-import { describe, it, expect, afterEach, vi } from "vitest";
-import { buildUrl, getQueryParam, getReturnUrl, Routes } from "@/lib/services/navigation.service";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
+import { navigate, reload, buildUrl, getQueryParam, getReturnUrl, Routes } from "@/lib/services/navigation.service";
 
 describe("Navigation Service", () => {
+  describe("navigate", () => {
+    /**
+     * REGUŁA BIZNESOWA: navigate() zmienia location.href i może czekać
+     * przed nawigacją (useful for showing toasts).
+     */
+
+    beforeEach(() => {
+      // Mock window.location
+      delete (window as { location?: Location }).location;
+      (window as { location?: Location }).location = { href: "" } as Location;
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    });
+
+    it("should navigate to URL immediately when no delay is provided", async () => {
+      // Arrange
+      const targetUrl = "/app/notes";
+
+      // Act
+      const navigationPromise = navigate(targetUrl);
+      await navigationPromise;
+
+      // Assert
+      expect(window.location.href).toBe(targetUrl);
+    });
+
+    it("should navigate to URL immediately when delay is 0", async () => {
+      // Arrange
+      const targetUrl = "/app/profile";
+
+      // Act
+      const navigationPromise = navigate(targetUrl, { delay: 0 });
+      await navigationPromise;
+
+      // Assert
+      expect(window.location.href).toBe(targetUrl);
+    });
+
+    it("should navigate to URL immediately when options is undefined", async () => {
+      // Arrange
+      const targetUrl = "/auth/login";
+
+      // Act
+      const navigationPromise = navigate(targetUrl, undefined);
+      await navigationPromise;
+
+      // Assert
+      expect(window.location.href).toBe(targetUrl);
+    });
+
+    it("should delay navigation when delay > 0", async () => {
+      // Arrange
+      const targetUrl = "/app/notes";
+      const delay = 1000;
+
+      // Act
+      const navigationPromise = navigate(targetUrl, { delay });
+
+      // Assert - before delay elapsed
+      expect(window.location.href).toBe(""); // Not yet changed
+
+      // Fast-forward time
+      await vi.advanceTimersByTimeAsync(delay);
+      await navigationPromise;
+
+      // Assert - after delay elapsed
+      expect(window.location.href).toBe(targetUrl);
+    });
+
+    it("should delay navigation by 500ms", async () => {
+      // Arrange
+      const targetUrl = "/app/travel-plans";
+      const delay = 500;
+
+      // Act
+      const navigationPromise = navigate(targetUrl, { delay });
+
+      // Assert - before delay
+      expect(window.location.href).toBe("");
+
+      // Fast-forward partial time
+      await vi.advanceTimersByTimeAsync(250);
+      expect(window.location.href).toBe(""); // Still not changed
+
+      // Fast-forward remaining time
+      await vi.advanceTimersByTimeAsync(250);
+      await navigationPromise;
+
+      // Assert - after full delay
+      expect(window.location.href).toBe(targetUrl);
+    });
+
+    it("should delay navigation by 2000ms for showing toast", async () => {
+      // Arrange - realistyczny scenariusz: pokazujemy toast przed nawigacją
+      const targetUrl = "/auth/login";
+      const delay = 2000; // 2 sekundy na wyświetlenie toasta
+
+      // Act
+      const navigationPromise = navigate(targetUrl, { delay });
+
+      // Assert - toast jest widoczny, nawigacja jeszcze nie nastąpiła
+      expect(window.location.href).toBe("");
+
+      // Fast-forward
+      await vi.advanceTimersByTimeAsync(delay);
+      await navigationPromise;
+
+      // Assert - po 2 sekundach następuje nawigacja
+      expect(window.location.href).toBe(targetUrl);
+    });
+
+    it("should handle navigation to different route types", async () => {
+      // Arrange & Act & Assert - różne typy URL
+      const routes = [
+        "/",
+        "/app/notes",
+        "/app/notes/123",
+        "/app/notes?page=2",
+        "/auth/login?returnUrl=/app/notes",
+        "#section",
+        "/path/with/multiple/segments",
+      ];
+
+      for (const route of routes) {
+        // Reset location
+        (window as { location?: Location }).location = { href: "" } as Location;
+
+        await navigate(route);
+        expect(window.location.href).toBe(route);
+      }
+    });
+
+    it("should handle absolute URLs", async () => {
+      // Arrange
+      const externalUrl = "https://example.com/page";
+
+      // Act
+      await navigate(externalUrl);
+
+      // Assert
+      expect(window.location.href).toBe(externalUrl);
+    });
+
+    it("should return promise that resolves after navigation", async () => {
+      // Arrange
+      const targetUrl = "/app/notes";
+      let resolved = false;
+
+      // Act
+      const navigationPromise = navigate(targetUrl).then(() => {
+        resolved = true;
+      });
+
+      await navigationPromise;
+
+      // Assert
+      expect(resolved).toBe(true);
+      expect(window.location.href).toBe(targetUrl);
+    });
+
+    it("should return promise that resolves after delay", async () => {
+      // Arrange
+      const targetUrl = "/app/profile";
+      const delay = 1000;
+      let resolved = false;
+
+      // Act
+      const navigationPromise = navigate(targetUrl, { delay }).then(() => {
+        resolved = true;
+      });
+
+      // Assert - not resolved yet
+      expect(resolved).toBe(false);
+
+      // Fast-forward
+      await vi.advanceTimersByTimeAsync(delay);
+      await navigationPromise;
+
+      // Assert - now resolved
+      expect(resolved).toBe(true);
+      expect(window.location.href).toBe(targetUrl);
+    });
+  });
+
+  describe("reload", () => {
+    /**
+     * REGUŁA BIZNESOWA: reload() odświeża aktualną stronę
+     * z obsługą View Transitions.
+     */
+
+    beforeEach(() => {
+      // Mock window.location.reload
+      delete (window as { location?: Location }).location;
+      const mockReload = vi.fn();
+      (window as { location?: Location }).location = {
+        reload: mockReload,
+      } as unknown as Location;
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("should call window.location.reload", async () => {
+      // Arrange
+      const mockReload = window.location.reload as unknown as ReturnType<typeof vi.fn>;
+
+      // Act
+      await reload();
+
+      // Assert
+      expect(mockReload).toHaveBeenCalledTimes(1);
+      expect(mockReload).toHaveBeenCalledWith();
+    });
+
+    it("should return promise that resolves after reload", async () => {
+      // Arrange
+      let resolved = false;
+
+      // Act
+      const reloadPromise = reload().then(() => {
+        resolved = true;
+      });
+
+      await reloadPromise;
+
+      // Assert
+      expect(resolved).toBe(true);
+    });
+
+    it("should call reload without arguments", async () => {
+      // Arrange
+      const mockReload = window.location.reload as unknown as ReturnType<typeof vi.fn>;
+
+      // Act
+      await reload();
+
+      // Assert
+      expect(mockReload).toHaveBeenCalledWith();
+    });
+  });
+
   describe("buildUrl", () => {
     /**
      * REGUŁA BIZNESOWA: Buduje URL z query parameters,
