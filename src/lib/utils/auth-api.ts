@@ -25,4 +25,3 @@ export function requireAuthApi(locals: AstroGlobal["locals"]) {
 
   return locals.user;
 }
-

@@ -14,7 +14,6 @@ interface NoteListItemProps {
  * Receives pre-formatted data from the ViewModel
  * Memoized to prevent unnecessary re-renders
  */
-/* eslint-disable react/prop-types */
 export const NoteListItem = memo<NoteListItemProps>(function NoteListItem({ note, currentPage, onClick }) {
   // Generate href with returnPage parameter
   const href = `${note.href}?returnPage=${currentPage}`;

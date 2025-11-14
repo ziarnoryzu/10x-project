@@ -24,19 +24,9 @@ const UpdateProfileSchema = z
  * Retrieves the authenticated user's profile.
  */
 export const GET: APIRoute = async ({ locals }) => {
-  // Check authentication
-  if (!locals.user) {
-    return new Response(
-      JSON.stringify({
-        error: "Unauthorized",
-        message: "Authentication required",
-      }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+  const userEmail = (locals.user as { id: string; email: string }).email;
 
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,7 +37,7 @@ export const GET: APIRoute = async ({ locals }) => {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", locals.user!.id)
+      .eq("id", userId)
       .single();
 
     // Step 2: Handle not found case
@@ -79,7 +69,7 @@ export const GET: APIRoute = async ({ locals }) => {
     // Step 4: Prepare response
     const response: UserProfileDTO = {
       id: profile.id,
-      email: locals.user!.email || "",
+      email: userEmail || "",
       name: profile.name,
       preferences,
       created_at: profile.created_at,
@@ -112,19 +102,9 @@ export const GET: APIRoute = async ({ locals }) => {
  * Name is required, preferences are optional.
  */
 export const PUT: APIRoute = async ({ request, locals }) => {
-  // Check authentication
-  if (!locals.user) {
-    return new Response(
-      JSON.stringify({
-        error: "Unauthorized",
-        message: "Authentication required",
-      }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+  const userEmail = (locals.user as { id: string; email: string }).email;
 
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,7 +159,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
     const { data: updatedProfile, error: updateError } = await supabase
       .from("profiles")
       .update(updateData)
-      .eq("id", locals.user!.id)
+      .eq("id", userId)
       .select()
       .single();
 
@@ -231,7 +211,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
     // Step 6: Prepare response
     const response: UserProfileDTO = {
       id: updatedProfile.id,
-      email: locals.user!.email || "",
+      email: userEmail || "",
       name: updatedProfile.name,
       preferences: updatedPreferences,
       created_at: updatedProfile.created_at,
@@ -268,19 +248,8 @@ export const PUT: APIRoute = async ({ request, locals }) => {
  * - User's auth account (if implemented)
  */
 export const DELETE: APIRoute = async ({ locals }) => {
-  // Check authentication
-  if (!locals.user) {
-    return new Response(
-      JSON.stringify({
-        error: "Unauthorized",
-        message: "Authentication required",
-      }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
 
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -289,10 +258,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
   try {
     // Step 1: Delete all travel plans associated with user's notes
     // First, get all note IDs for the user
-    const { data: userNotes, error: notesListError } = await supabase
-      .from("notes")
-      .select("id")
-      .eq("user_id", locals.user!.id);
+    const { data: userNotes, error: notesListError } = await supabase.from("notes").select("id").eq("user_id", userId);
 
     if (notesListError) {
       // eslint-disable-next-line no-console
@@ -313,7 +279,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     }
 
     // Step 2: Delete all user's notes
-    const { error: notesDeleteError } = await supabase.from("notes").delete().eq("user_id", locals.user!.id);
+    const { error: notesDeleteError } = await supabase.from("notes").delete().eq("user_id", userId);
 
     if (notesDeleteError) {
       // eslint-disable-next-line no-console
@@ -331,7 +297,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     }
 
     // Step 3: Delete user's profile
-    const { error: profileDeleteError } = await supabase.from("profiles").delete().eq("id", locals.user!.id);
+    const { error: profileDeleteError } = await supabase.from("profiles").delete().eq("id", userId);
 
     if (profileDeleteError) {
       // eslint-disable-next-line no-console
@@ -350,7 +316,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
 
     // Step 4: Delete user from Supabase Auth (optional - requires admin privileges)
     // TODO: Implement when proper authentication is set up
-    // const { error: authDeleteError } = await supabase.auth.admin.deleteUser(locals.user!.id);
+    // const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userId);
     // if (authDeleteError) {
     //   console.error("Error deleting auth user:", authDeleteError);
     // }

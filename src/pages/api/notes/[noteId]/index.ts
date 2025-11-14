@@ -27,6 +27,9 @@ const UpdateNoteSchema = z
  * Validates note ownership and returns 404 if not found.
  */
 export const GET: APIRoute = async ({ params, locals }) => {
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -54,7 +57,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
       .from("notes")
       .select("*")
       .eq("id", noteId)
-      .eq("user_id", locals.user!.id)
+      .eq("user_id", userId)
       .single();
 
     // Step 3: Handle not found case
@@ -108,6 +111,9 @@ export const GET: APIRoute = async ({ params, locals }) => {
  * At least one field must be provided.
  */
 export const PUT: APIRoute = async ({ params, request, locals }) => {
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -169,7 +175,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       .from("notes")
       .select("id")
       .eq("id", noteId)
-      .eq("user_id", locals.user!.id)
+      .eq("user_id", userId)
       .single();
 
     if (!existingNote) {
@@ -244,6 +250,9 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
  * Deletes the note. Related travel plan (if exists) is also cascaded.
  */
 export const DELETE: APIRoute = async ({ params, locals }) => {
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -271,7 +280,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       .from("notes")
       .select("id")
       .eq("id", noteId)
-      .eq("user_id", locals.user!.id)
+      .eq("user_id", userId)
       .single();
 
     if (!existingNote) {

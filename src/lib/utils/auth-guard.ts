@@ -37,4 +37,3 @@ export function requireNoAuth(Astro: Readonly<AstroGlobal>, redirectTo = "/app/n
 
   return null;
 }
-

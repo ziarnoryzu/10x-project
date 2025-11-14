@@ -17,6 +17,9 @@ const UUIDSchema = z.string().uuid();
  * The new note will have a new ID and no linked travel plan.
  */
 export const POST: APIRoute = async ({ params, locals }) => {
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -44,7 +47,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
       .from("notes")
       .select("*")
       .eq("id", noteId)
-      .eq("user_id", locals.user!.id)
+      .eq("user_id", userId)
       .single();
 
     // Step 3: Handle not found case
@@ -65,7 +68,7 @@ export const POST: APIRoute = async ({ params, locals }) => {
     const { data: copiedNote, error: copyError } = await supabase
       .from("notes")
       .insert({
-        user_id: locals.user!.id,
+        user_id: userId,
         title: `${originalNote.title} (Copy)`,
         content: originalNote.content,
       })

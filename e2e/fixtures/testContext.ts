@@ -15,8 +15,8 @@ interface TestFixtures {
  */
 export const test = base.extend<TestFixtures>({
   // Track created notes for cleanup
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  createdNoteIds: async ({}: {}, use) => {
+  // eslint-disable-next-line no-empty-pattern
+  createdNoteIds: async ({}, use) => {
     const noteIds: string[] = [];
     await use(noteIds);
 
@@ -26,7 +26,6 @@ export const test = base.extend<TestFixtures>({
       const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
       if (!supabaseUrl || !supabaseKey) {
-        // eslint-disable-next-line no-console
         console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables");
         return;
       }
@@ -37,7 +36,6 @@ export const test = base.extend<TestFixtures>({
       const { error } = await supabase.from("notes").delete().in("id", noteIds);
 
       if (error) {
-        // eslint-disable-next-line no-console
         console.error("Failed to cleanup notes:", error);
       }
     }

@@ -24,19 +24,8 @@ const ChangePasswordSchema = z.object({
  * Requires active user session and current password for verification.
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  // Check authentication
-  if (!locals.user) {
-    return new Response(
-      JSON.stringify({
-        error: "Unauthorized",
-        message: "Authentication required",
-      }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
+  // User is guaranteed to exist by middleware
+  const userEmail = (locals.user as { id: string; email: string }).email;
 
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,7 +68,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Step 3: Verify current password by attempting to sign in
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: locals.user.email,
+      email: userEmail,
       password: current_password,
     });
 
