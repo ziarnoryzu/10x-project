@@ -49,7 +49,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev:e2e",
     url: "http://localhost:3000",
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 30 * 1000,
     stdout: "pipe",
     stderr: "pipe",
