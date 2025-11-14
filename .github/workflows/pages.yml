@@ -1,4 +1,4 @@
-name: Deploy Astro to GitHub Pages
+name: Build Test (SSR not supported on GitHub Pages)
 
 on:
   push:
@@ -6,19 +6,10 @@ on:
       - master
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
 jobs:
-  deploy:
+  build-test:
+    name: Test Production Build
     runs-on: ubuntu-latest
-    environment: github-pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,13 +24,12 @@ jobs:
         run: npm ci
 
       - name: Build (Astro)
+        env:
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+          DEFAULT_USER_ID: placeholder-user-id
         run: npm run build
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Build Success
+        run: echo "✅ Build completed successfully. Deploy to a platform that supports SSR (Vercel, Netlify, Cloudflare Pages)"
