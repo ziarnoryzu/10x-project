@@ -112,7 +112,6 @@ export function ForgotPasswordForm({ sentConfirmation = false }: ForgotPasswordF
             aria-invalid={!isEmailValid && email.length > 0}
             disabled={isSubmitting}
             autoComplete="email"
-            autoFocus
             required
           />
           {!isEmailValid && email.length > 0 && (

@@ -37,10 +37,7 @@ const activePath = Astro.url.pathname;
         </header>
 
         <!-- Page content -->
-        <main
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-background"
-          style="touch-action: pan-y; -webkit-overflow-scrolling: touch;"
-        >
+        <main class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-background">
           <slot />
         </main>
       </div>
@@ -50,10 +47,11 @@ const activePath = Astro.url.pathname;
   </body>
 </html>
 
-<script is:inline>
+<!-- eslint-disable -->
+<script is:inline define:vars={{}}>
   // Aggressive cleanup before navigation
   document.addEventListener("astro:before-preparation", () => {
-    // Force remove overflow:hidden that might be left by Sheet component
+    // Force remove overflow hidden that might be left by Sheet component
     document.body.style.overflow = "";
     document.body.style.removeProperty("overflow");
 
@@ -61,7 +59,7 @@ const activePath = Astro.url.pathname;
     document.body.style.pointerEvents = "";
     document.body.style.removeProperty("pointer-events");
 
-    // Force close any open dialogs/sheets
+    // Force close any open dialogs or sheets
     const escEvent = new KeyboardEvent("keydown", {
       key: "Escape",
       code: "Escape",

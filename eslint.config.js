@@ -23,6 +23,22 @@ const baseConfig = tseslint.config({
   },
 });
 
+// API routes config - enforce type safety (no non-null assertions)
+const apiRoutesConfig = tseslint.config({
+  files: ["src/pages/api/**/*.ts"],
+  rules: {
+    "@typescript-eslint/no-non-null-assertion": "error",
+  },
+});
+
+// E2E tests and scripts - allow console.log for debugging
+const testingConfig = tseslint.config({
+  files: ["e2e/**/*.ts", "scripts/**/*.ts", "test/**/*.ts", "src/pages/api/ai/**/*.ts", "src/lib/services/ai/**/*.ts"],
+  rules: {
+    "no-console": "off",
+  },
+});
+
 const jsxA11yConfig = tseslint.config({
   files: ["**/*.{js,jsx,ts,tsx}"],
   extends: [jsxA11y.flatConfigs.recommended],
@@ -52,13 +68,19 @@ const reactConfig = tseslint.config({
   rules: {
     ...eslintPluginReactHooks.configs.recommended.rules,
     "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off", // Using TypeScript for prop validation
     "react-compiler/react-compiler": "error",
   },
 });
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
+  {
+    ignores: ["src/layouts/MainLayout.astro"], // Has inline script with parsing issues
+  },
   baseConfig,
+  apiRoutesConfig,
+  testingConfig,
   jsxA11yConfig,
   reactConfig,
   eslintPluginAstro.configs["flat/recommended"],

@@ -38,6 +38,9 @@ const UpdateTravelPlanSchema = z.object({
  * Retrieves the travel plan linked to the note.
  */
 export const GET: APIRoute = async ({ params, locals }) => {
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -61,12 +64,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
     const noteId = noteIdValidation.data;
 
     // Step 2: Check if note exists and user has access
-    const { data: note } = await supabase
-      .from("notes")
-      .select("id")
-      .eq("id", noteId)
-      .eq("user_id", locals.user!.id)
-      .single();
+    const { data: note } = await supabase.from("notes").select("id").eq("id", noteId).eq("user_id", userId).single();
 
     if (!note) {
       return new Response(
@@ -138,6 +136,9 @@ export const GET: APIRoute = async ({ params, locals }) => {
  * Returns 200 if exists, 404 if not found.
  */
 export const HEAD: APIRoute = async ({ params, locals }) => {
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -152,12 +153,7 @@ export const HEAD: APIRoute = async ({ params, locals }) => {
     const noteId = noteIdValidation.data;
 
     // Step 2: Check if note exists and user has access
-    const { data: note } = await supabase
-      .from("notes")
-      .select("id")
-      .eq("id", noteId)
-      .eq("user_id", locals.user!.id)
-      .single();
+    const { data: note } = await supabase.from("notes").select("id").eq("id", noteId).eq("user_id", userId).single();
 
     if (!note) {
       return new Response(null, { status: 404 });
@@ -183,6 +179,9 @@ export const HEAD: APIRoute = async ({ params, locals }) => {
  * Requires confirmation to overwrite the previous plan.
  */
 export const PUT: APIRoute = async ({ params, request, locals }) => {
+  // User is guaranteed to exist by middleware
+  const userId = (locals.user as { id: string; email: string }).id;
+
   // Type assertion for Supabase client
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = (locals as any).supabase as SupabaseClient;
@@ -258,7 +257,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       .from("notes")
       .select("*")
       .eq("id", noteId)
-      .eq("user_id", locals.user!.id)
+      .eq("user_id", userId)
       .single();
 
     if (noteError || !note) {
@@ -289,11 +288,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     }
 
     // Step 7: Retrieve user profile with preferences
-    const { data: userProfile } = await supabase
-      .from("profiles")
-      .select("preferences")
-      .eq("id", locals.user!.id)
-      .single();
+    const { data: userProfile } = await supabase.from("profiles").select("preferences").eq("id", userId).single();
 
     // Parse preferences from Json to string[]
     let userPreferences: string[] = [];

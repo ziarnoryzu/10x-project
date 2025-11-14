@@ -21,3 +21,5 @@ export const NotesList = memo<NotesListProps>(function NotesList({ notes, curren
     </div>
   );
 });
+
+NotesList.displayName = "NotesList";

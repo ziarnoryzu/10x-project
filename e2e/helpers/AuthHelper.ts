@@ -72,7 +72,9 @@ export async function login(page: Page) {
 
     if (currentUrl.includes("/auth/login") && !hasModal) {
       // Take screenshot for debugging
-      await page.screenshot({ path: "test-results/login-failed.png" }).catch(() => {});
+      await page.screenshot({ path: "test-results/login-failed.png" }).catch(() => {
+        // Ignore screenshot errors
+      });
       throw new Error(`Login failed - check credentials. Still at ${currentUrl}`);
     }
   }

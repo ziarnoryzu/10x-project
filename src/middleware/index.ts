@@ -14,15 +14,37 @@ const PUBLIC_PATHS = [
   "/auth/register",
   "/auth/reset-password",
   "/auth/forgot-password",
-  // Auth API endpoints
+  // Auth API endpoints (public - no authentication required)
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/logout",
   "/api/auth/reset-password",
   "/api/auth/forgot-password",
+  "/api/auth/password", // Password reset with token
   // Public pages
   "/",
 ];
+
+// API paths that require authentication
+const PROTECTED_API_PREFIX = "/api/";
+const PUBLIC_API_PREFIXES = [
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/logout",
+  "/api/auth/reset-password",
+  "/api/auth/forgot-password",
+  "/api/auth/password",
+];
+
+function isProtectedApiPath(pathname: string): boolean {
+  // Check if it's an API path
+  if (!pathname.startsWith(PROTECTED_API_PREFIX)) {
+    return false;
+  }
+
+  // Check if it's a public API path
+  return !PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { locals, cookies, url, request, redirect } = context;
@@ -52,6 +74,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Normalize pathname - remove base path if exists
   // This ensures route matching works correctly whether deployed at root or subdirectory
   const pathname = BASE_PATH ? url.pathname.replace(new RegExp(`^${BASE_PATH}`), "") : url.pathname;
+
+  // Handle API endpoints - return 401 JSON response for protected API routes
+  if (isProtectedApiPath(pathname) && !user) {
+    return new Response(
+      JSON.stringify({
+        error: "Unauthorized",
+        message: "Authentication required",
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
 
   // Redirect to login for protected routes if not authenticated
   if (!user && !PUBLIC_PATHS.includes(pathname)) {
