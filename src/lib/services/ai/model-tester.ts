@@ -1,5 +1,3 @@
-import type { ChatCompletionParams } from "../../types";
-
 export interface Message {
   role: "system" | "user" | "assistant";
   content: string;
