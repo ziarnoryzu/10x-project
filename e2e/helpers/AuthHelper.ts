@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 /**
  * Login user using credentials from environment variables
@@ -30,26 +31,31 @@ export async function login(page: Page) {
 
   await emailField.click();
   await emailField.fill(email);
+  // Trigger input event to ensure React detects the change
+  await emailField.dispatchEvent("input");
 
   await passwordField.click();
   await passwordField.fill(password);
+  // Trigger input event to ensure React detects the change
+  await passwordField.dispatchEvent("input");
 
-  // Wait a bit to ensure form is ready
-  await page.waitForTimeout(500);
-
-  // Click login button and wait for navigation
+  // Wait for the form to detect values and enable the button
   const loginButton = page.getByRole("button", { name: "Zaloguj się" });
-
-  // Check if button is enabled
-  const isDisabled = await loginButton.isDisabled();
-  if (isDisabled) {
-    throw new Error("Login button is disabled - form validation may have failed");
-  }
+  await loginButton.waitFor({ state: "visible", timeout: 5000 });
+  
+  // Wait for button to be enabled (give React time to update state)
+  await expect(loginButton).toBeEnabled({ timeout: 2000 });
 
   await loginButton.click();
 
-  // Wait for the button to change to "Logowanie..." (loading state)
-  await page.waitForTimeout(500);
+  // Wait for the button text to change to "Logowanie..." (loading state)
+  // or for navigation to start - whichever comes first
+  await Promise.race([
+    page.waitForURL(/\/app\/.*/, { timeout: 10000 }),
+    page.getByRole("button", { name: "Logowanie..." }).waitFor({ state: "visible", timeout: 2000 }),
+  ]).catch(() => {
+    // Ignore timeout - we'll check navigation below
+  });
 
   // Wait for navigation to complete - either to app or preferences modal appears
   // Give it more time as Supabase auth might be slow
