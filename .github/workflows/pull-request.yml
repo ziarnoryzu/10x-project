@@ -1,0 +1,161 @@
+name: Pull Request CI
+
+on:
+  pull_request:
+    branches:
+      - master
+
+env:
+  NODE_ENV: test
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npx eslint .
+
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: unit-test-coverage
+          path: coverage/
+          retention-days: 30
+
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    environment: integration
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        env:
+          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          E2E_USERNAME_ID: ${{ secrets.E2E_USERNAME_ID }}
+          E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+        run: npx playwright test --reporter=html,json
+
+      - name: Upload E2E coverage
+        uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: e2e-test-coverage
+          path: playwright-report/coverage/
+          retention-days: 30
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: e2e-test-results
+          path: test-results/
+          retention-days: 30
+
+  status-comment:
+    name: Post Status Comment
+    runs-on: ubuntu-latest
+    needs: [lint, unit-test, e2e-test]
+    if: always()
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Check job statuses
+        id: check_status
+        run: |
+          if [ "${{ needs.lint.result }}" == "success" ] && [ "${{ needs.unit-test.result }}" == "success" ] && [ "${{ needs.e2e-test.result }}" == "success" ]; then
+            echo "status=✅ All checks passed!" >> $GITHUB_OUTPUT
+            echo "color=28a745" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Some checks failed" >> $GITHUB_OUTPUT
+            echo "color=d73a49" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const status = '${{ steps.check_status.outputs.status }}';
+            const lintStatus = '${{ needs.lint.result }}' === 'success' ? '✅' : '❌';
+            const unitTestStatus = '${{ needs.unit-test.result }}' === 'success' ? '✅' : '❌';
+            const e2eTestStatus = '${{ needs.e2e-test.result }}' === 'success' ? '✅' : '❌';
+            
+            const body = `## ${status}
+            
+            ### CI Pipeline Results
+            
+            | Job | Status |
+            |-----|--------|
+            | Lint | ${lintStatus} ${{ needs.lint.result }} |
+            | Unit Tests | ${unitTestStatus} ${{ needs.unit-test.result }} |
+            | E2E Tests | ${e2eTestStatus} ${{ needs.e2e-test.result }} |
+            
+            ---
+            *Pipeline run: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
