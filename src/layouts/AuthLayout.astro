@@ -2,6 +2,7 @@
 import { ViewTransitions } from "astro:transitions";
 import "../styles/global.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 interface Props {
   title?: string;
@@ -21,28 +22,30 @@ const { title = "VibeTravels" } = Astro.props;
     <ViewTransitions />
   </head>
   <body class="min-h-screen bg-background">
-    <div class="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div class="w-full max-w-md space-y-8">
-        <!-- Logo -->
-        <div class="text-center">
-          <a href="/" class="inline-block">
-            <h1 class="text-3xl font-bold text-primary">VibeTravels</h1>
-          </a>
-        </div>
+    <ThemeProvider client:load>
+      <div class="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+        <div class="w-full max-w-md space-y-8">
+          <!-- Logo -->
+          <div class="text-center">
+            <a href="/" class="inline-block">
+              <h1 class="text-3xl font-bold text-primary">VibeTravels</h1>
+            </a>
+          </div>
 
-        <!-- Main content -->
-        <div class="rounded-lg border bg-card p-6 shadow-sm sm:p-8">
-          <slot />
-        </div>
+          <!-- Main content -->
+          <div class="rounded-lg border bg-card p-6 shadow-sm sm:p-8">
+            <slot />
+          </div>
 
-        <!-- Footer links -->
-        <div class="text-center text-sm text-muted-foreground">
-          <slot name="footer" />
+          <!-- Footer links -->
+          <div class="text-center text-sm text-muted-foreground">
+            <slot name="footer" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <Toaster client:load transition:persist="toaster" />
+      <Toaster client:load transition:persist="toaster" />
+    </ThemeProvider>
   </body>
 </html>
 
